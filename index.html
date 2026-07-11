@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>特殊算道場</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #4a90d9;
+      --primary-dark: #2d6fb0;
+      --accent: #f5a623;
+      --success: #27ae60;
+      --error: #e74c3c;
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --muted: #7f8c8d;
+      --locked: #b0bec5;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'Hiragino Maru Gothic ProN', 'Hiragino Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ===== SCREENS ===== */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ===== HOME ===== */
+    #home-screen {
+      padding: 0 0 40px;
+    }
+
+    .home-header {
+      background: var(--primary);
+      color: white;
+      padding: 48px 24px 32px;
+      text-align: center;
+    }
+
+    .home-header h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .home-header p {
+      font-size: 0.95rem;
+      opacity: 0.85;
+    }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 24px 16px;
+    }
+
+    .module-tile {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 24px 12px 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: 2px solid transparent;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .module-tile:active:not(.locked) {
+      transform: scale(0.96);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .module-tile.unlocked {
+      border-color: var(--primary);
+    }
+
+    .module-tile.locked {
+      cursor: default;
+      opacity: 0.65;
+    }
+
+    .tile-icon {
+      font-size: 2.4rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .tile-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .tile-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 2px 10px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+
+    .badge-open {
+      background: #e8f4fd;
+      color: var(--primary-dark);
+    }
+
+    .badge-soon {
+      background: #eceff1;
+      color: var(--locked);
+    }
+
+    /* ===== QUIZ SCREEN ===== */
+    #quiz-screen {
+      padding: 0 0 48px;
+    }
+
+    .quiz-header {
+      background: var(--primary);
+      color: white;
+      padding: 48px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .back-btn:active { opacity: 0.7; }
+
+    .quiz-header h2 {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .quiz-body {
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .question-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .question-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .question-text {
+      font-size: 1.2rem;
+      line-height: 1.75;
+      font-weight: 600;
+    }
+
+    .question-text span.num {
+      color: var(--primary-dark);
+      font-size: 1.35rem;
+      font-weight: 900;
+    }
+
+    .answer-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .answer-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .answer-row:last-of-type { margin-bottom: 0; }
+
+    .answer-label {
+      font-size: 1rem;
+      font-weight: 700;
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    .answer-input {
+      flex: 1;
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 12px;
+      border: 2px solid #dde3ea;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: var(--text);
+      -webkit-appearance: none;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+
+    .answer-input:focus { border-color: var(--primary); }
+
+    .answer-unit {
+      font-size: 1rem;
+      color: var(--muted);
+      width: 24px;
+      flex-shrink: 0;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      font-size: 1.2rem;
+      font-weight: 800;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      font-family: inherit;
+    }
+
+    .submit-btn:active { transform: scale(0.97); background: var(--primary-dark); }
+
+    /* ===== RESULT ===== */
+    .result-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .result-icon {
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+    }
+
+    .result-label {
+      font-size: 1.6rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .result-label.correct { color: var(--success); }
+    .result-label.wrong { color: var(--error); }
+
+    .result-answer {
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .next-btn {
+      width: 100%;
+      padding: 18px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      font-family: inherit;
+    }
+
+    .next-btn:active { transform: scale(0.97); opacity: 0.85; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- ===== HOME ===== -->
+<div id="home-screen" class="screen active">
+  <div class="home-header">
+    <h1>特殊算道場</h1>
+    <p>ちょっとむずかしい算数をトレーニング！</p>
+  </div>
+  <div class="modules-grid" id="modules-grid"></div>
+</div>
+
+<!-- ===== QUIZ ===== -->
+<div id="quiz-screen" class="screen">
+  <div class="quiz-header">
+    <button class="back-btn" onclick="goHome()">← もどる</button>
+    <h2 id="quiz-title"></h2>
+  </div>
+  <div class="quiz-body">
+    <div class="question-card">
+      <div class="question-label">もんだい</div>
+      <div class="question-text" id="question-text"></div>
+    </div>
+
+    <div class="answer-card" id="answer-card">
+      <!-- inputs injected by module -->
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="checkAnswer()">こたえあわせ</button>
+
+    <div class="result-card hidden" id="result-card">
+      <div class="result-icon" id="result-icon"></div>
+      <div class="result-label" id="result-label"></div>
+      <div class="result-answer" id="result-answer"></div>
+    </div>
+
+    <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">つぎのもんだい →</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  MODULE REGISTRY
+// ============================================================
+const modules = [];
+
+function registerModule(mod) {
+  modules.push(mod);
+}
+
+// ============================================================
+//  鶴亀算 MODULE
+// ============================================================
+registerModule({
+  id: 'tsurukame',
+  name: '鶴亀算',
+  icon: '🐢',
+  unlocked: true,
+
+  _current: null,
+
+  generate() {
+    const headCount = randInt(5, 15);
+    const tsuru = randInt(1, headCount - 1);
+    const kame  = headCount - tsuru;
+    const legCount = tsuru * 2 + kame * 4;
+    this._current = { headCount, tsuru, kame, legCount };
+    return {
+      text: `つると かめが あわせて <span class="num">${headCount}</span>ひき、<br>あしは あわせて <span class="num">${legCount}</span>本。<br>それぞれ 何びき？`,
+      inputs: [
+        { id: 'ans-tsuru', label: 'つるの数', unit: 'わ' },
+        { id: 'ans-kame',  label: 'かめの数', unit: 'ひき' },
+      ],
+    };
+  },
+
+  checkAnswer() {
+    const t = parseInt(document.getElementById('ans-tsuru').value, 10);
+    const k = parseInt(document.getElementById('ans-kame').value,  10);
+    const { tsuru, kame } = this._current;
+    const correct = t === tsuru && k === kame;
+    return {
+      correct,
+      explanation: `つる ${tsuru}わ、かめ ${kame}ひき`,
+    };
+  },
+});
+
+// ============================================================
+//  COMING SOON MODULES (placeholder entries)
+// ============================================================
+[
+  { id: 'tabibito', name: '旅人算',   icon: '🚶' },
+  { id: 'ueki',     name: '植木算',   icon: '🌳' },
+  { id: 'ryusui',   name: '流水算',   icon: '🌊' },
+  { id: 'sasume',   name: '差集め算', icon: '📐' },
+  { id: 'kafusoku', name: '過不足算', icon: '⚖️' },
+].forEach(m => registerModule({ ...m, unlocked: false, generate: null, checkAnswer: null }));
+
+// ============================================================
+//  HOME SCREEN — render tiles
+// ============================================================
+function renderHome() {
+  const grid = document.getElementById('modules-grid');
+  grid.innerHTML = '';
+  modules.forEach(mod => {
+    const tile = document.createElement('div');
+    tile.className = 'module-tile ' + (mod.unlocked ? 'unlocked' : 'locked');
+    tile.innerHTML = `
+      <span class="tile-icon">${mod.icon}</span>
+      <div class="tile-name">${mod.name}</div>
+      <span class="tile-badge ${mod.unlocked ? 'badge-open' : 'badge-soon'}">
+        ${mod.unlocked ? 'れんしゅうする' : 'きんじつ公開'}
+      </span>`;
+    if (mod.unlocked) tile.onclick = () => startModule(mod.id);
+    grid.appendChild(tile);
+  });
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+let activeModule = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  activeModule = null;
+  showScreen('home-screen');
+}
+
+function startModule(id) {
+  activeModule = modules.find(m => m.id === id);
+  if (!activeModule) return;
+  document.getElementById('quiz-title').textContent = activeModule.name;
+  showScreen('quiz-screen');
+  loadQuestion();
+}
+
+// ============================================================
+//  QUIZ FLOW
+// ============================================================
+function loadQuestion() {
+  const q = activeModule.generate();
+
+  document.getElementById('question-text').innerHTML = q.text;
+
+  // build inputs
+  const card = document.getElementById('answer-card');
+  card.innerHTML = '';
+  q.inputs.forEach(inp => {
+    const row = document.createElement('div');
+    row.className = 'answer-row';
+    row.innerHTML = `
+      <span class="answer-label">${inp.label}</span>
+      <input id="${inp.id}" class="answer-input" type="number" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="?">
+      <span class="answer-unit">${inp.unit}</span>`;
+    card.appendChild(row);
+  });
+  // focus first input after short delay (iOS keyboard)
+  setTimeout(() => {
+    const first = card.querySelector('input');
+    if (first) first.focus();
+  }, 300);
+
+  document.getElementById('submit-btn').classList.remove('hidden');
+  document.getElementById('result-card').classList.add('hidden');
+  document.getElementById('next-btn').classList.add('hidden');
+}
+
+function checkAnswer() {
+  const result = activeModule.checkAnswer();
+
+  const icon  = document.getElementById('result-icon');
+  const label = document.getElementById('result-label');
+  const ans   = document.getElementById('result-answer');
+
+  if (result.correct) {
+    icon.textContent  = '⭕';
+    label.textContent = 'せいかい！';
+    label.className   = 'result-label correct';
+    ans.textContent   = result.explanation;
+  } else {
+    icon.textContent  = '❌';
+    label.textContent = 'もういちど！';
+    label.className   = 'result-label wrong';
+    ans.textContent   = 'こたえ：' + result.explanation;
+  }
+
+  document.getElementById('submit-btn').classList.add('hidden');
+  document.getElementById('result-card').classList.remove('hidden');
+  document.getElementById('next-btn').classList.remove('hidden');
+}
+
+function nextQuestion() {
+  loadQuestion();
+}
+
+// ============================================================
+//  UTILS
+// ============================================================
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+renderHome();
+</script>
+</body>
+</html>
