@@ -304,6 +304,36 @@
 
     .hidden { display: none !important; }
 
+    /* ===== LEVEL SWITCHER ===== */
+    .level-switcher {
+      display: flex;
+      gap: 8px;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .level-btn {
+      flex: 1;
+      padding: 10px 6px;
+      font-size: 1rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .level-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
     /* ===== EXPLANATION ===== */
     .explanation-card {
       background: var(--card);
@@ -389,6 +419,11 @@
     <h2 id="quiz-title"></h2>
   </div>
   <div class="quiz-body">
+    <div class="level-switcher">
+      <button class="level-btn active" id="btn-basic"   onclick="setLevel('basic')">きほん 🐢</button>
+      <button class="level-btn"        id="btn-applied" onclick="setLevel('applied')">おうよう ⭐</button>
+    </div>
+
     <div class="question-card">
       <div class="question-label">もんだい</div>
       <div class="question-text" id="question-text"></div>
@@ -434,41 +469,103 @@ registerModule({
   name: '鶴亀算',
   icon: '🐢',
   unlocked: true,
-
+  _level: 'basic',
   _current: null,
 
   generate() {
-    const headCount = randInt(5, 15);
-    // ensure at least 1 tsuru and 1 kame so the diagram always has 2 regions
-    const tsuru = randInt(1, headCount - 1);
-    const kame  = headCount - tsuru;
-    const legCount = tsuru * 2 + kame * 4;
-    this._current = { headCount, tsuru, kame, legCount };
+    return this._level === 'basic' ? this._genBasic() : this._genApplied();
+  },
+
+  // ---- basic: つる(足2) vs かめ(足4) ----
+  _genBasic() {
+    const N   = randInt(6, 18);
+    const nA  = randInt(1, N - 1);
+    const nB  = N - nA;
+    const valA = 2, valB = 4;
+    const S   = nA * valA + nB * valB;
+    this._current = { N, nA, nB, valA, valB, S,
+      nameA: 'つる', unitA: 'わ', nameB: 'かめ', unitB: 'ひき', unitS: '本' };
     return {
-      text: `つると かめが あわせて <span class="num">${headCount}</span>ひき、<br>あしは あわせて <span class="num">${legCount}</span>本。<br>それぞれ 何びき？`,
+      text: `つると かめが あわせて <span class="num">${N}</span>ひき、<br>あしは あわせて <span class="num">${S}</span>本。<br>それぞれ 何びき？`,
       inputs: [
-        { id: 'ans-tsuru', label: 'つるの数', unit: 'わ' },
-        { id: 'ans-kame',  label: 'かめの数', unit: 'ひき' },
+        { id: 'ans-A', label: 'つるの数', unit: 'わ' },
+        { id: 'ans-B', label: 'かめの数', unit: 'ひき' },
+      ],
+    };
+  },
+
+  // ---- applied: 3テンプレートからランダム ----
+  _genApplied() {
+    const tpls = [this._tplBike, this._tplCoins, this._tplStationery];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _tplBike() {
+    const N   = randInt(5, 14);
+    const nA  = randInt(1, N - 1);
+    const nB  = N - nA;
+    const valA = 2, valB = 3;
+    const S   = nA * valA + nB * valB;
+    this._current = { N, nA, nB, valA, valB, S,
+      nameA: 'じてんしゃ', unitA: 'だい', nameB: 'さんりんしゃ', unitB: 'だい', unitS: '本' };
+    return {
+      text: `じてんしゃと さんりんしゃが あわせて <span class="num">${N}</span>だい、<br>タイヤは あわせて <span class="num">${S}</span>本。<br>それぞれ 何だい？`,
+      inputs: [
+        { id: 'ans-A', label: 'じてんしゃ', unit: 'だい' },
+        { id: 'ans-B', label: 'さんりんしゃ', unit: 'だい' },
+      ],
+    };
+  },
+
+  _tplCoins() {
+    const N   = randInt(5, 14);
+    const nA  = randInt(1, N - 1);
+    const nB  = N - nA;
+    const valA = 10, valB = 50;
+    const S   = nA * valA + nB * valB;
+    this._current = { N, nA, nB, valA, valB, S,
+      nameA: '10円玉', unitA: 'まい', nameB: '50円玉', unitB: 'まい', unitS: '円' };
+    return {
+      text: `10円玉と 50円玉が あわせて <span class="num">${N}</span>まい、<br>あわせて <span class="num">${S}</span>円。<br>それぞれ 何まい？`,
+      inputs: [
+        { id: 'ans-A', label: '10円玉', unit: 'まい' },
+        { id: 'ans-B', label: '50円玉', unit: 'まい' },
+      ],
+    };
+  },
+
+  _tplStationery() {
+    const pencilPrices = [30, 40, 50, 60, 70];
+    const eraserPrices = [80, 90, 100, 120, 150];
+    const valA = pencilPrices[randInt(0, pencilPrices.length - 1)];
+    const valB = eraserPrices[randInt(0, eraserPrices.length - 1)];
+    const N   = randInt(5, 12);
+    const nA  = randInt(1, N - 1);
+    const nB  = N - nA;
+    const S   = nA * valA + nB * valB;
+    this._current = { N, nA, nB, valA, valB, S,
+      nameA: 'えんぴつ', unitA: '本', nameB: '消しゴム', unitB: 'こ', unitS: '円' };
+    return {
+      text: `1本 <span class="num">${valA}</span>円の えんぴつと、<br>1こ <span class="num">${valB}</span>円の 消しゴムを<br>あわせて <span class="num">${N}</span>こ かって <span class="num">${S}</span>円。<br>それぞれ 何こ？`,
+      inputs: [
+        { id: 'ans-A', label: 'えんぴつ', unit: '本' },
+        { id: 'ans-B', label: '消しゴム', unit: 'こ' },
       ],
     };
   },
 
   checkAnswer() {
-    const t = parseInt(document.getElementById('ans-tsuru').value, 10);
-    const k = parseInt(document.getElementById('ans-kame').value,  10);
-    const { tsuru, kame } = this._current;
-    const correct = t === tsuru && k === kame;
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    const b = parseInt(document.getElementById('ans-B').value, 10);
+    const { nA, nB, nameA, unitA, nameB, unitB } = this._current;
     return {
-      correct,
-      explanation: `つる ${tsuru}わ、かめ ${kame}ひき`,
+      correct: a === nA && b === nB,
+      explanation: `${nameA} ${nA}${unitA}、${nameB} ${nB}${unitB}`,
     };
   },
 
   explain() {
-    const { headCount: N, tsuru: c, kame: k, legCount: L } = this._current;
-    const allKame  = N * 4;
-    const diff     = allKame - L;
-    return { N, c, k, L, allKame, diff };
+    return { ...this._current };
   },
 });
 
@@ -522,7 +619,19 @@ function startModule(id) {
   activeModule = modules.find(m => m.id === id);
   if (!activeModule) return;
   document.getElementById('quiz-title').textContent = activeModule.name;
+  // reset to basic level
+  if (activeModule._level !== undefined) activeModule._level = 'basic';
+  document.getElementById('btn-basic').classList.add('active');
+  document.getElementById('btn-applied').classList.remove('active');
   showScreen('quiz-screen');
+  loadQuestion();
+}
+
+function setLevel(level) {
+  if (!activeModule) return;
+  activeModule._level = level;
+  document.getElementById('btn-basic').classList.toggle('active', level === 'basic');
+  document.getElementById('btn-applied').classList.toggle('active', level === 'applied');
   loadQuestion();
 }
 
@@ -598,132 +707,103 @@ function nextQuestion() {
 }
 
 // ============================================================
-//  EXPLANATION RENDERER
+//  EXPLANATION RENDERER  （一般化版）
 // ============================================================
-function renderExplanation({ N, c, k, L, allKame, diff }) {
-  // --- SVG area diagram ---
-  const PAD_L = 48;  // left axis label area
+function renderExplanation({ N, nA, nB, valA, valB, S,
+                              nameA, unitA, nameB, unitB, unitS }) {
+  const diff   = N * valB - S;          // = nA*(valB-valA)
+  const allB   = N * valB;
+  const spread = valB - valA;
+
+  // ---- SVG area diagram ----
+  const PAD_L = 58;   // wider to fit "150円" labels
   const PAD_R = 12;
   const PAD_T = 14;
-  const PAD_B = 40;  // bottom labels
-  const W = 320;     // inner draw width (viewBox units)
-  const H = 120;     // inner draw height (4 legs = H px)
+  const PAD_B = 42;
+  const W = 300;
+  const H = 120;      // total height = valB units
 
   const vbW = PAD_L + W + PAD_R;
   const vbH = PAD_T + H + PAD_B;
 
-  // pixel widths per unit
   const unitW = W / N;
-  const unitH = H / 4;   // height for 1 leg
+  const unitH = H / valB;   // px per 1 value unit
 
-  const x0 = PAD_L;
-  const y0 = PAD_T;
+  const x0 = PAD_L, y0 = PAD_T;
 
-  // tsuru region: x=[x0, x0+c*unitW], kame: x=[x0+c*unitW, x0+N*unitW]
-  const tsuruW = c * unitW;
-  const kameW  = k * unitW;
-  const tsuruX = x0;
-  const kameX  = x0 + tsuruW;
+  const aW = nA * unitW, bW = nB * unitW;
+  const aX = x0,         bX = x0 + aW;
 
-  // colour palette
-  const COL_TSURU  = '#378ADD';
-  const COL_KAME   = '#5a9e28';
-  const COL_RED    = '#E24B4A';
-  const COL_GRID   = '#dde3ea';
-  const COL_TEXT   = '#2c3e50';
-  const COL_MUTED  = '#7f8c8d';
+  const COL_A    = '#378ADD';
+  const COL_B    = '#5a9e28';
+  const COL_RED  = '#E24B4A';
+  const COL_GRID = '#dde3ea';
+  const COL_TEXT = '#2c3e50';
+  const COL_MUTED= '#7f8c8d';
 
-  // tsuru filled area: height 2 (legs 0→2 from bottom = y: H-2*unitH → H)
-  const tsuruFillY = y0 + 2 * unitH;  // top of blue rect
-  const tsuruFillH = 2 * unitH;
-
-  // red dotted region: height 2 (legs 2→4 = y: y0 → y0+2*unitH)
+  // A filled (bottom valA rows)
+  const aFillH = valA * unitH;
+  const aFillY = y0 + H - aFillH;
+  // red dashed (top spread rows of A columns)
+  const redH = spread * unitH;
   const redY = y0;
-  const redH = 2 * unitH;
-
-  // kame filled area: full height 4
-  const kameFillY = y0;
-  const kameFillH = 4 * unitH;
-
-  // dashed pattern id
-  const dashId = 'dash-pattern';
+  // B filled (full height)
+  const bFillY = y0, bFillH = H;
 
   let svg = `<svg viewBox="0 0 ${vbW} ${vbH}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#f8fafc;border-radius:10px;">
   <defs>
-    <pattern id="${dashId}" width="6" height="6" patternUnits="userSpaceOnUse">
+    <pattern id="dp" width="6" height="6" patternUnits="userSpaceOnUse">
       <rect width="6" height="6" fill="#fde8e8"/>
       <line x1="0" y1="0" x2="6" y2="6" stroke="${COL_RED}" stroke-width="0.8" opacity="0.5"/>
     </pattern>
   </defs>`;
 
-  // ---- filled regions ----
-  // kame (green) full
-  svg += `<rect x="${kameX}" y="${kameFillY}" width="${kameW}" height="${kameFillH}" fill="${COL_KAME}" opacity="0.75" rx="2"/>`;
-  // tsuru blue (bottom 2 rows)
-  svg += `<rect x="${tsuruX}" y="${tsuruFillY}" width="${tsuruW}" height="${tsuruFillH}" fill="${COL_TSURU}" opacity="0.82" rx="2"/>`;
-  // red dashed (top 2 rows of tsuru columns)
-  svg += `<rect x="${tsuruX}" y="${redY}" width="${tsuruW}" height="${redH}" fill="url(#${dashId})" rx="2"/>`;
-  svg += `<rect x="${tsuruX}" y="${redY}" width="${tsuruW}" height="${redH}" fill="none" stroke="${COL_RED}" stroke-width="1.5" stroke-dasharray="4 3" rx="2"/>`;
+  // filled regions
+  svg += `<rect x="${bX}" y="${bFillY}" width="${bW}" height="${bFillH}" fill="${COL_B}" opacity="0.75" rx="2"/>`;
+  svg += `<rect x="${aX}" y="${aFillY}" width="${aW}" height="${aFillH}" fill="${COL_A}" opacity="0.82" rx="2"/>`;
+  svg += `<rect x="${aX}" y="${redY}"   width="${aW}" height="${redH}"   fill="url(#dp)" rx="2"/>`;
+  svg += `<rect x="${aX}" y="${redY}"   width="${aW}" height="${redH}"   fill="none" stroke="${COL_RED}" stroke-width="1.5" stroke-dasharray="4 3" rx="2"/>`;
 
-  // ---- grid lines (horizontal, every unitH) ----
-  for (let leg = 0; leg <= 4; leg++) {
-    const gy = y0 + leg * unitH;
-    svg += `<line x1="${x0}" y1="${gy}" x2="${x0 + W}" y2="${gy}" stroke="${COL_GRID}" stroke-width="${leg === 0 || leg === 4 ? 1.5 : 0.7}"/>`;
-  }
-  // vertical divider between tsuru / kame
-  if (c > 0 && k > 0) {
-    svg += `<line x1="${kameX}" y1="${y0}" x2="${kameX}" y2="${y0 + H}" stroke="${COL_GRID}" stroke-width="1.2" stroke-dasharray="3 2"/>`;
-  }
+  // grid lines at 0, valA, valB
+  [0, valA, valB].forEach(v => {
+    const gy = y0 + H - v * unitH;
+    const isBold = v === 0 || v === valB;
+    svg += `<line x1="${x0}" y1="${gy}" x2="${x0 + W}" y2="${gy}" stroke="${COL_GRID}" stroke-width="${isBold ? 1.5 : 0.7}"/>`;
+  });
+  // vertical divider
+  svg += `<line x1="${bX}" y1="${y0}" x2="${bX}" y2="${y0 + H}" stroke="${COL_GRID}" stroke-width="1.2" stroke-dasharray="3 2"/>`;
 
-  // ---- Y-axis ----
+  // Y-axis
   svg += `<line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0 + H}" stroke="${COL_TEXT}" stroke-width="1.5"/>`;
-  // axis labels
-  svg += `<text x="${x0 - 5}" y="${y0 + H}" text-anchor="end" font-size="10" fill="${COL_MUTED}" dominant-baseline="middle">0</text>`;
-  svg += `<text x="${x0 - 5}" y="${y0 + 2 * unitH}" text-anchor="end" font-size="10" fill="${COL_MUTED}" dominant-baseline="middle">2本</text>`;
-  svg += `<text x="${x0 - 5}" y="${y0}" text-anchor="end" font-size="10" fill="${COL_MUTED}" dominant-baseline="middle">4本</text>`;
+  svg += `<text x="${x0-5}" y="${y0 + H}"              text-anchor="end" font-size="9" fill="${COL_MUTED}" dominant-baseline="middle">0</text>`;
+  svg += `<text x="${x0-5}" y="${y0 + H - aFillH}"     text-anchor="end" font-size="9" fill="${COL_MUTED}" dominant-baseline="middle">${valA}${unitS}</text>`;
+  svg += `<text x="${x0-5}" y="${y0}"                  text-anchor="end" font-size="9" fill="${COL_MUTED}" dominant-baseline="middle">${valB}${unitS}</text>`;
 
-  // ---- region labels ----
-  // tsuru label (inside blue)
-  if (tsuruW > 20) {
-    svg += `<text x="${tsuruX + tsuruW / 2}" y="${tsuruFillY + tsuruFillH / 2}" text-anchor="middle" font-size="11" font-weight="bold" fill="white" dominant-baseline="middle">つる</text>`;
-  }
-  // kame label (inside green)
-  if (kameW > 20) {
-    svg += `<text x="${kameX + kameW / 2}" y="${kameFillY + kameFillH / 2}" text-anchor="middle" font-size="11" font-weight="bold" fill="white" dominant-baseline="middle">かめ</text>`;
-  }
-  // red label
-  if (tsuruW > 28) {
-    svg += `<text x="${tsuruX + tsuruW / 2}" y="${redY + redH / 2}" text-anchor="middle" font-size="10" font-weight="bold" fill="${COL_RED}" dominant-baseline="middle">${diff}本へらす</text>`;
-  }
+  // region labels
+  if (aW > 22) svg += `<text x="${aX+aW/2}" y="${aFillY+aFillH/2}" text-anchor="middle" font-size="11" font-weight="bold" fill="white" dominant-baseline="middle">${nameA}</text>`;
+  if (bW > 22) svg += `<text x="${bX+bW/2}" y="${bFillY+bFillH/2}" text-anchor="middle" font-size="11" font-weight="bold" fill="white" dominant-baseline="middle">${nameB}</text>`;
+  if (aW > 30) svg += `<text x="${aX+aW/2}" y="${redY+redH/2}"     text-anchor="middle" font-size="10" font-weight="bold" fill="${COL_RED}" dominant-baseline="middle">${diff}${unitS}へらす</text>`;
 
-  // ---- bottom labels (つる c, かめ k) ----
+  // bottom labels
   const labelY = y0 + H + 16;
-  svg += `<text x="${tsuruX + tsuruW / 2}" y="${labelY}" text-anchor="middle" font-size="11" fill="${COL_TSURU}" font-weight="bold">つる ${c}わ</text>`;
-  svg += `<text x="${kameX  + kameW  / 2}" y="${labelY}" text-anchor="middle" font-size="11" fill="${COL_KAME}"  font-weight="bold">かめ ${k}ひき</text>`;
+  svg += `<text x="${aX+aW/2}" y="${labelY}" text-anchor="middle" font-size="11" fill="${COL_A}" font-weight="bold">${nameA} ${nA}${unitA}</text>`;
+  svg += `<text x="${bX+bW/2}" y="${labelY}" text-anchor="middle" font-size="11" fill="${COL_B}" font-weight="bold">${nameB} ${nB}${unitB}</text>`;
 
-  // ---- X-axis bottom line ----
-  svg += `<line x1="${x0}" y1="${y0 + H}" x2="${x0 + W}" y2="${y0 + H}" stroke="${COL_TEXT}" stroke-width="1.5"/>`;
-
+  // X-axis
+  svg += `<line x1="${x0}" y1="${y0+H}" x2="${x0+W}" y2="${y0+H}" stroke="${COL_TEXT}" stroke-width="1.5"/>`;
   svg += `</svg>`;
 
   document.getElementById('area-diagram').innerHTML = svg;
 
-  // --- Step-by-step text ---
+  // ---- Step-by-step text ----
   const steps = [
-    `ぜんぶ <span class="green">かめ</span> だとすると…<br><em>${N}</em> × 4 = <em>${allKame}</em>本`,
-    `じっさいは <em>${L}</em>本。ちがいは<br><em>${allKame}</em> − <em>${L}</em> = <span class="red">${diff}</span>本`,
-    `つる1ぴきで あしが 2本へる<br><span class="red">${diff}</span> ÷ 2 = <em>${c}</em>　→　つる <em>${c}</em>わ`,
-    `かめは <em>${N}</em> − <em>${c}</em> = <em>${k}</em>　→　かめ <em>${k}</em>ひき`,
+    `ぜんぶ <span class="green">${nameB}</span> だとすると…<br><em>${N}</em> × <em>${valB}</em> = <em>${allB}</em>${unitS}`,
+    `じっさいは <em>${S}</em>${unitS}。ちがいは<br><em>${allB}</em> − <em>${S}</em> = <span class="red">${diff}</span>${unitS}`,
+    `${nameA}1つで <em>${spread}</em>${unitS}へる<br><span class="red">${diff}</span> ÷ <em>${spread}</em> = <em>${nA}</em>　→　${nameA} <em>${nA}</em>${unitA}`,
+    `${nameB}は <em>${N}</em> − <em>${nA}</em> = <em>${nB}</em>　→　${nameB} <em>${nB}</em>${unitB}`,
   ];
 
   const list = document.getElementById('steps-list');
-  list.innerHTML = steps.map((s, i) => `
-    <div class="step-row">
-      <div class="step-num">①②③④`[i + 1] + /* ①② cheat: use array */ `</div>
-      <div class="step-text">${s}</div>
-    </div>`).join('');
-
-  // rebuild properly
   list.innerHTML = '';
   steps.forEach((s, i) => {
     const row = document.createElement('div');
