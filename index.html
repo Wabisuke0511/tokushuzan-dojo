@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="特殊算道場">
   <link rel="apple-touch-icon" href="./icon-192.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -405,6 +406,203 @@
 
     .step-text .red { color: #e24b4a; font-weight: 900; }
     .step-text .green { color: #639922; font-weight: 900; }
+
+    /* ===== HOME ACTIONS ===== */
+    .home-actions {
+      padding: 0 16px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .home-action-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .home-action-btn:active { transform: scale(0.97); opacity: 0.85; }
+
+    .btn-graph { background: #2d6fb0; color: white; }
+
+    .tile-ref-btn {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: #e8f4fd;
+      color: var(--primary-dark);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== GRAPH SCREEN ===== */
+    #graph-screen { padding: 0 0 48px; }
+
+    .graph-header {
+      background: #2d6fb0;
+      color: white;
+      padding: 48px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .graph-header h2 { font-size: 1.25rem; font-weight: 800; }
+
+    .graph-body {
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-box {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 8px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .stat-val {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--primary);
+      line-height: 1.1;
+    }
+
+    .stat-lbl {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .graph-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 18px 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .graph-card-title {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      margin-bottom: 12px;
+    }
+
+    .dots-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .result-dot { font-size: 1.4rem; line-height: 1; }
+
+    .no-records {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: 2px solid var(--error);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--error);
+      cursor: pointer;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .reset-btn:active { background: #fdf0f0; }
+
+    /* ===== REFERENCE SCREEN ===== */
+    #ref-screen { padding: 0 0 48px; }
+
+    .ref-header {
+      background: var(--accent);
+      color: white;
+      padding: 48px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ref-header h2 { font-size: 1.15rem; font-weight: 800; }
+
+    .ref-body {
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .ref-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .ref-card-title {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .ref-concept-text {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      font-weight: 600;
+    }
+
+    .ref-method-text {
+      font-size: 1rem;
+      line-height: 1.75;
+      font-weight: 600;
+      background: #eef6ff;
+      border-left: 4px solid var(--primary);
+      padding: 10px 14px;
+      border-radius: 0 10px 10px 0;
+    }
+
+    .ref-example-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 10px;
+    }
+
+    .ref-q-text {
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.75;
+      margin-bottom: 14px;
+    }
   </style>
 </head>
 <body>
@@ -416,6 +614,61 @@
     <p>ちょっとむずかしい算数をトレーニング！</p>
   </div>
   <div class="modules-grid" id="modules-grid"></div>
+  <div class="home-actions">
+    <button class="home-action-btn btn-graph" onclick="showGraph()">📊 きろく（グラフ）を見る</button>
+  </div>
+</div>
+
+<!-- ===== GRAPH ===== -->
+<div id="graph-screen" class="screen">
+  <div class="graph-header">
+    <button class="back-btn" onclick="goHome()">← もどる</button>
+    <h2>きろく</h2>
+  </div>
+  <div class="graph-body">
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="g-total">0</div><div class="stat-lbl">合計問題数</div></div>
+      <div class="stat-box"><div class="stat-val" id="g-accuracy">-%</div><div class="stat-lbl">正答率</div></div>
+      <div class="stat-box"><div class="stat-val" id="g-streak">0</div><div class="stat-lbl">連続正解中</div></div>
+    </div>
+
+    <div class="graph-card">
+      <div class="graph-card-title">レベル別 正答率</div>
+      <canvas id="g-chart" height="160"></canvas>
+      <div id="g-chart-empty" class="no-records hidden">まだ きろくがありません</div>
+    </div>
+
+    <div class="graph-card">
+      <div class="graph-card-title">さいきんの 問題（あたらしい順）</div>
+      <div class="dots-row" id="g-dots"></div>
+    </div>
+
+    <button class="reset-btn" onclick="clearRecords()">きろくを リセットする</button>
+  </div>
+</div>
+
+<!-- ===== REFERENCE ===== -->
+<div id="ref-screen" class="screen">
+  <div class="ref-header">
+    <button class="back-btn" onclick="goHome()">← もどる</button>
+    <h2 id="ref-title"></h2>
+  </div>
+  <div class="ref-body">
+    <div class="ref-card">
+      <div class="ref-card-title">どんな問題？</div>
+      <div class="ref-concept-text" id="ref-concept"></div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-card-title">かんがえかた</div>
+      <div class="ref-method-text" id="ref-method"></div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-example-label">📝 れいだい</div>
+      <div class="ref-q-text" id="ref-q"></div>
+      <div class="area-diagram" id="ref-diagram"></div>
+      <div class="steps-list" id="ref-steps"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ===== QUIZ ===== -->
@@ -595,13 +848,22 @@ function renderHome() {
   modules.forEach(mod => {
     const tile = document.createElement('div');
     tile.className = 'module-tile ' + (mod.unlocked ? 'unlocked' : 'locked');
+    const hasRef = !!REF_CONTENT[mod.id];
     tile.innerHTML = `
       <span class="tile-icon">${mod.icon}</span>
       <div class="tile-name">${mod.name}</div>
       <span class="tile-badge ${mod.unlocked ? 'badge-open' : 'badge-soon'}">
         ${mod.unlocked ? 'れんしゅうする' : 'きんじつ公開'}
-      </span>`;
-    if (mod.unlocked) tile.onclick = () => startModule(mod.id);
+      </span>
+      ${mod.unlocked && hasRef ? `<div class="tile-ref-btn" data-id="${mod.id}">📖 きほんをかくにん</div>` : ''}`;
+    if (mod.unlocked) {
+      tile.onclick = e => {
+        if (e.target.closest('.tile-ref-btn')) return;
+        startModule(mod.id);
+      };
+      const refBtn = tile.querySelector('.tile-ref-btn');
+      if (refBtn) refBtn.onclick = e => { e.stopPropagation(); showReference(mod.id); };
+    }
     grid.appendChild(tile);
   });
 }
@@ -617,6 +879,7 @@ function showScreen(id) {
 }
 
 function goHome() {
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
   activeModule = null;
   showScreen('home-screen');
 }
@@ -692,6 +955,9 @@ function checkAnswer() {
     ans.textContent   = 'こたえ：' + result.explanation;
   }
 
+  // save record
+  saveRecord(activeModule.id, activeModule._level || 'basic', result.correct);
+
   document.getElementById('submit-btn').classList.add('hidden');
   document.getElementById('result-card').classList.remove('hidden');
 
@@ -713,12 +979,140 @@ function nextQuestion() {
 }
 
 // ============================================================
+//  RECORDS
+// ============================================================
+const RECORDS_KEY = 'tokushuzan_records';
+
+function loadRecords() {
+  try { return JSON.parse(localStorage.getItem(RECORDS_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveRecord(moduleId, level, correct) {
+  const recs = loadRecords();
+  recs.push({ date: new Date().toISOString(), moduleId, level, correct });
+  localStorage.setItem(RECORDS_KEY, JSON.stringify(recs));
+}
+
+// ============================================================
+//  GRAPH SCREEN
+// ============================================================
+let chartInstance = null;
+
+function showGraph() {
+  showScreen('graph-screen');
+  renderGraph();
+}
+
+function renderGraph() {
+  const recs = loadRecords();
+  const total   = recs.length;
+  const correct = recs.filter(r => r.correct).length;
+  const pct     = total ? Math.round(correct / total * 100) : null;
+
+  let streak = 0;
+  for (let i = recs.length - 1; i >= 0; i--) {
+    if (recs[i].correct) streak++; else break;
+  }
+
+  document.getElementById('g-total').textContent    = total + '問';
+  document.getElementById('g-accuracy').textContent = pct !== null ? pct + '%' : '-%';
+  document.getElementById('g-streak').textContent   = streak + '問';
+
+  // recent dots (newest first, up to 20)
+  const recent  = recs.slice(-20).reverse();
+  const dotsEl  = document.getElementById('g-dots');
+  dotsEl.innerHTML = recent.length
+    ? recent.map(r => `<span class="result-dot">${r.correct ? '⭕' : '❌'}</span>`).join('')
+    : '<span class="no-records">まだ きろくがありません</span>';
+
+  // bar chart: basic vs applied
+  const basic   = recs.filter(r => r.level === 'basic');
+  const applied = recs.filter(r => r.level === 'applied');
+  const bAcc    = basic.length   ? Math.round(basic.filter(r=>r.correct).length   / basic.length   * 100) : null;
+  const aAcc    = applied.length ? Math.round(applied.filter(r=>r.correct).length / applied.length * 100) : null;
+
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+  const emptyEl = document.getElementById('g-chart-empty');
+  if (bAcc === null && aAcc === null) {
+    emptyEl.classList.remove('hidden');
+    document.getElementById('g-chart').style.display = 'none';
+  } else {
+    emptyEl.classList.add('hidden');
+    document.getElementById('g-chart').style.display = '';
+    const ctx = document.getElementById('g-chart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['きほん 🐢', 'おうよう ⭐'],
+        datasets: [{
+          data: [bAcc ?? 0, aAcc ?? 0],
+          backgroundColor: ['rgba(74,144,217,0.85)', 'rgba(245,166,35,0.85)'],
+          borderRadius: 10,
+          borderSkipped: false,
+        }],
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            min: 0, max: 100,
+            ticks: { stepSize: 20, callback: v => v + '%' },
+            grid: { color: '#eee' },
+          },
+          x: { grid: { display: false } },
+        },
+      },
+    });
+  }
+}
+
+function clearRecords() {
+  if (!confirm('きろくを ぜんぶ けしますか？')) return;
+  localStorage.removeItem(RECORDS_KEY);
+  renderGraph();
+}
+
+// ============================================================
+//  REFERENCE SCREEN
+// ============================================================
+const REF_CONTENT = {
+  tsurukame: {
+    title: '鶴亀算',
+    concept: `<b>つるとかめ</b>のように、<b>2しゅるい</b>のものが まざっているとき、<br>それぞれ 何びきか もとめる計算です。<br>足の数（や 金がく・タイヤの数など）が ヒントになります。`,
+    method: `ぜんぶ <b>かめ（大きい方）</b> だと かりてかんがえ、<br>じっさいとのちがいから <b>つるの数をもとめる</b> 方法をつかいます。`,
+    exQ: `つるとかめが あわせて <b>7ひき</b>、あしは あわせて <b>22本</b>。<br>それぞれ 何びき？`,
+    example: { N: 7, nA: 3, nB: 4, valA: 2, valB: 4, S: 22,
+               nameA: 'つる', unitA: 'わ', nameB: 'かめ', unitB: 'ひき', unitS: '本' },
+  },
+};
+
+function showReference(moduleId) {
+  const c = REF_CONTENT[moduleId];
+  if (!c) return;
+  document.getElementById('ref-title').textContent  = c.title + ' ってなに？';
+  document.getElementById('ref-concept').innerHTML  = c.concept;
+  document.getElementById('ref-method').innerHTML   = c.method;
+  document.getElementById('ref-q').innerHTML        = c.exQ;
+  document.getElementById('ref-diagram').innerHTML  = buildSVGDiagram(c.example);
+  const list = document.getElementById('ref-steps');
+  list.innerHTML = '';
+  buildStepItems(c.example).forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'step-row';
+    row.innerHTML = `<div class="step-num">${i + 1}</div><div class="step-text">${s}</div>`;
+    list.appendChild(row);
+  });
+  showScreen('ref-screen');
+}
+
+// ============================================================
 //  EXPLANATION RENDERER  （一般化版）
 // ============================================================
-function renderExplanation({ N, nA, nB, valA, valB, S,
-                              nameA, unitA, nameB, unitB, unitS }) {
-  const diff   = N * valB - S;          // = nA*(valB-valA)
-  const allB   = N * valB;
+function buildSVGDiagram({ N, nA, nB, valA, valB, S,
+                            nameA, unitA, nameB, unitB, unitS }) {
+  const diff   = N * valB - S;
   const spread = valB - valA;
 
   // ---- SVG area diagram ----
@@ -798,20 +1192,27 @@ function renderExplanation({ N, nA, nB, valA, valB, S,
   // X-axis
   svg += `<line x1="${x0}" y1="${y0+H}" x2="${x0+W}" y2="${y0+H}" stroke="${COL_TEXT}" stroke-width="1.5"/>`;
   svg += `</svg>`;
+  return svg;
+}
 
-  document.getElementById('area-diagram').innerHTML = svg;
-
-  // ---- Step-by-step text ----
-  const steps = [
+function buildStepItems({ N, nA, nB, valA, valB, S,
+                           nameA, unitA, nameB, unitB, unitS }) {
+  const diff   = N * valB - S;
+  const allB   = N * valB;
+  const spread = valB - valA;
+  return [
     `ぜんぶ <span class="green">${nameB}</span> だとすると…<br><em>${N}</em> × <em>${valB}</em> = <em>${allB}</em>${unitS}`,
     `じっさいは <em>${S}</em>${unitS}。ちがいは<br><em>${allB}</em> − <em>${S}</em> = <span class="red">${diff}</span>${unitS}`,
     `${nameA}1つで <em>${spread}</em>${unitS}へる<br><span class="red">${diff}</span> ÷ <em>${spread}</em> = <em>${nA}</em>　→　${nameA} <em>${nA}</em>${unitA}`,
     `${nameB}は <em>${N}</em> − <em>${nA}</em> = <em>${nB}</em>　→　${nameB} <em>${nB}</em>${unitB}`,
   ];
+}
 
+function renderExplanation(params) {
+  document.getElementById('area-diagram').innerHTML = buildSVGDiagram(params);
   const list = document.getElementById('steps-list');
   list.innerHTML = '';
-  steps.forEach((s, i) => {
+  buildStepItems(params).forEach((s, i) => {
     const row = document.createElement('div');
     row.className = 'step-row';
     row.innerHTML = `<div class="step-num">${i + 1}</div><div class="step-text">${s}</div>`;
