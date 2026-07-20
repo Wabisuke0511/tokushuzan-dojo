@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>特殊算道場</title>
+  <title>算数道場</title>
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#4a90d9">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="特殊算道場">
+  <meta name="apple-mobile-web-app-title" content="算数道場">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
@@ -37,39 +37,96 @@
       margin: 0 auto;
     }
 
-    /* ===== SCREENS ===== */
     .screen { display: none; min-height: 100vh; }
     .screen.active { display: flex; flex-direction: column; }
 
-    /* ===== HOME ===== */
-    #home-screen {
-      padding: 0 0 40px;
-    }
+    /* ===== TOP SCREEN ===== */
+    #top-screen { padding: 0 0 40px; }
 
-    .home-header {
+    .top-header {
       background: var(--primary);
       color: white;
       padding: 48px 24px 32px;
       text-align: center;
     }
 
-    .home-header h1 {
+    .top-header h1 {
       font-size: 2rem;
       font-weight: 900;
       letter-spacing: 0.05em;
       margin-bottom: 6px;
     }
 
-    .home-header p {
+    .top-header p {
       font-size: 0.95rem;
       opacity: 0.85;
     }
 
+    .categories-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 24px 16px;
+    }
+
+    .category-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      border-left: 5px solid var(--primary);
+      transition: transform 0.15s, box-shadow 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .category-card:active { transform: scale(0.97); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+    .cat-icon { font-size: 2.4rem; flex-shrink: 0; }
+
+    .cat-info { flex: 1; }
+
+    .cat-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .cat-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .cat-arrow {
+      font-size: 1.2rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    /* ===== SECTION SCREEN ===== */
+    #section-screen { padding: 0 0 40px; }
+
+    .section-header {
+      color: white;
+      padding: 48px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-header h2 { font-size: 1.25rem; font-weight: 800; }
+
+    /* ===== MODULE GRID (shared by section screen) ===== */
     .modules-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
-      padding: 24px 16px;
+      padding: 24px 16px 8px;
     }
 
     .module-tile {
@@ -90,20 +147,10 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
 
-    .module-tile.unlocked {
-      border-color: var(--primary);
-    }
+    .module-tile.unlocked { border-color: var(--primary); }
+    .module-tile.locked { cursor: default; opacity: 0.65; }
 
-    .module-tile.locked {
-      cursor: default;
-      opacity: 0.65;
-    }
-
-    .tile-icon {
-      font-size: 2.4rem;
-      margin-bottom: 10px;
-      display: block;
-    }
+    .tile-icon { font-size: 2.4rem; margin-bottom: 10px; display: block; }
 
     .tile-name {
       font-size: 1.05rem;
@@ -120,20 +167,48 @@
       margin-top: 6px;
     }
 
-    .badge-open {
+    .badge-open { background: #e8f4fd; color: var(--primary-dark); }
+    .badge-soon { background: #eceff1; color: var(--locked); }
+
+    .tile-ref-btn {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
       background: #e8f4fd;
       color: var(--primary-dark);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .badge-soon {
-      background: #eceff1;
-      color: var(--locked);
+    /* ===== HOME ACTIONS ===== */
+    .home-actions {
+      padding: 0 16px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
+
+    .home-action-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .home-action-btn:active { transform: scale(0.97); opacity: 0.85; }
+    .btn-graph { background: #2d6fb0; color: white; }
 
     /* ===== QUIZ SCREEN ===== */
-    #quiz-screen {
-      padding: 0 0 48px;
-    }
+    #quiz-screen { padding: 0 0 48px; }
 
     .quiz-header {
       background: var(--primary);
@@ -158,10 +233,7 @@
 
     .back-btn:active { opacity: 0.7; }
 
-    .quiz-header h2 {
-      font-size: 1.25rem;
-      font-weight: 800;
-    }
+    .quiz-header h2 { font-size: 1.25rem; font-weight: 800; }
 
     .quiz-body {
       padding: 20px 16px;
@@ -242,7 +314,7 @@
     .answer-unit {
       font-size: 1rem;
       color: var(--muted);
-      width: 24px;
+      width: 36px;
       flex-shrink: 0;
     }
 
@@ -272,25 +344,11 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    .result-icon {
-      font-size: 3.5rem;
-      margin-bottom: 10px;
-    }
-
-    .result-label {
-      font-size: 1.6rem;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
-
+    .result-icon { font-size: 3.5rem; margin-bottom: 10px; }
+    .result-label { font-size: 1.6rem; font-weight: 900; margin-bottom: 8px; }
     .result-label.correct { color: var(--success); }
     .result-label.wrong { color: var(--error); }
-
-    .result-answer {
-      font-size: 0.95rem;
-      color: var(--muted);
-      line-height: 1.7;
-    }
+    .result-answer { font-size: 0.95rem; color: var(--muted); line-height: 1.7; }
 
     .next-btn {
       width: 100%;
@@ -336,10 +394,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    .level-btn.active {
-      background: var(--primary);
-      color: white;
-    }
+    .level-btn.active { background: var(--primary); color: white; }
 
     /* ===== EXPLANATION ===== */
     .explanation-card {
@@ -365,17 +420,9 @@
       overflow: hidden;
     }
 
-    .steps-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .steps-list { display: flex; flex-direction: column; gap: 10px; }
 
-    .step-row {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-    }
+    .step-row { display: flex; gap: 12px; align-items: flex-start; }
 
     .step-num {
       background: var(--primary);
@@ -392,58 +439,10 @@
       margin-top: 1px;
     }
 
-    .step-text {
-      font-size: 1rem;
-      line-height: 1.65;
-      font-weight: 600;
-    }
-
-    .step-text em {
-      font-style: normal;
-      color: var(--primary-dark);
-      font-weight: 900;
-    }
-
+    .step-text { font-size: 1rem; line-height: 1.65; font-weight: 600; }
+    .step-text em { font-style: normal; color: var(--primary-dark); font-weight: 900; }
     .step-text .red { color: #e24b4a; font-weight: 900; }
     .step-text .green { color: #639922; font-weight: 900; }
-
-    /* ===== HOME ACTIONS ===== */
-    .home-actions {
-      padding: 0 16px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .home-action-btn {
-      width: 100%;
-      padding: 16px;
-      font-size: 1.05rem;
-      font-weight: 800;
-      border: none;
-      border-radius: var(--radius);
-      cursor: pointer;
-      font-family: inherit;
-      -webkit-tap-highlight-color: transparent;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-
-    .home-action-btn:active { transform: scale(0.97); opacity: 0.85; }
-
-    .btn-graph { background: #2d6fb0; color: white; }
-
-    .tile-ref-btn {
-      display: inline-block;
-      margin-top: 8px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 4px 12px;
-      border-radius: 20px;
-      background: #e8f4fd;
-      color: var(--primary-dark);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
 
     /* ===== GRAPH SCREEN ===== */
     #graph-screen { padding: 0 0 48px; }
@@ -466,11 +465,7 @@
       gap: 16px;
     }
 
-    .stats-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-    }
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 
     .stat-box {
       background: var(--card);
@@ -480,18 +475,8 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    .stat-val {
-      font-size: 1.5rem;
-      font-weight: 900;
-      color: var(--primary);
-      line-height: 1.1;
-    }
-
-    .stat-lbl {
-      font-size: 0.72rem;
-      color: var(--muted);
-      margin-top: 4px;
-    }
+    .stat-val { font-size: 1.5rem; font-weight: 900; color: var(--primary); line-height: 1.1; }
+    .stat-lbl { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
 
     .graph-card {
       background: var(--card);
@@ -508,18 +493,9 @@
       margin-bottom: 12px;
     }
 
-    .dots-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
+    .dots-row { display: flex; flex-wrap: wrap; gap: 6px; }
     .result-dot { font-size: 1.4rem; line-height: 1; }
-
-    .no-records {
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
+    .no-records { font-size: 0.9rem; color: var(--muted); }
 
     .reset-btn {
       width: 100%;
@@ -574,11 +550,7 @@
       margin-bottom: 10px;
     }
 
-    .ref-concept-text {
-      font-size: 1.05rem;
-      line-height: 1.8;
-      font-weight: 600;
-    }
+    .ref-concept-text { font-size: 1.05rem; line-height: 1.8; font-weight: 600; }
 
     .ref-method-text {
       font-size: 1rem;
@@ -603,15 +575,129 @@
       line-height: 1.75;
       margin-bottom: 14px;
     }
+
+    /* ===== FACTOR VISUAL (GCD / LCM) ===== */
+    .factor-visual {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 14px 12px;
+      margin-bottom: 20px;
+    }
+
+    .factor-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .factor-row:last-of-type { margin-bottom: 0; }
+
+    .factor-label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--muted);
+      white-space: nowrap;
+      padding-top: 4px;
+      min-width: 64px;
+    }
+
+    .factor-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .factor-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+      padding: 0 8px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: #e9edf1;
+      color: var(--muted);
+    }
+
+    .factor-chip.common { background: #d4edff; color: var(--primary-dark); }
+    .factor-chip.factor-max { background: var(--primary); color: white; }
+    .factor-chip.lcm-match { background: #27ae60; color: white; }
+
+    .factor-answer {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #dde3ea;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .factor-answer strong { color: var(--primary); font-size: 1.2rem; }
+
+    /* ===== SEQUENCE VISUAL (等差数列) ===== */
+    .seq-visual {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 14px 12px;
+      margin-bottom: 20px;
+    }
+
+    .seq-item { text-align: center; }
+
+    .seq-val {
+      background: var(--primary);
+      color: white;
+      font-size: 1rem;
+      font-weight: 800;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .seq-idx {
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 3px;
+      font-weight: 600;
+    }
+
+    .seq-arrow {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      padding-bottom: 16px;
+    }
+
+    .seq-ellipsis {
+      font-size: 1.2rem;
+      color: var(--muted);
+      padding-bottom: 14px;
+    }
   </style>
 </head>
 <body>
 
-<!-- ===== HOME ===== -->
-<div id="home-screen" class="screen active">
-  <div class="home-header">
-    <h1>特殊算道場</h1>
-    <p>ちょっとむずかしい算数をトレーニング！</p>
+<!-- ===== TOP ===== -->
+<div id="top-screen" class="screen active">
+  <div class="top-header">
+    <h1>算数道場</h1>
+    <p>算数をトレーニング！</p>
+  </div>
+  <div class="categories-list" id="categories-list"></div>
+</div>
+
+<!-- ===== SECTION ===== -->
+<div id="section-screen" class="screen">
+  <div class="section-header" id="section-header">
+    <button class="back-btn" onclick="goTop()">← もどる</button>
+    <h2 id="section-title"></h2>
   </div>
   <div class="modules-grid" id="modules-grid"></div>
   <div class="home-actions">
@@ -622,8 +708,8 @@
 <!-- ===== GRAPH ===== -->
 <div id="graph-screen" class="screen">
   <div class="graph-header">
-    <button class="back-btn" onclick="goHome()">← もどる</button>
-    <h2>きろく</h2>
+    <button class="back-btn" onclick="goSection()">← もどる</button>
+    <h2 id="graph-title">きろく</h2>
   </div>
   <div class="graph-body">
     <div class="stats-row">
@@ -650,7 +736,7 @@
 <!-- ===== REFERENCE ===== -->
 <div id="ref-screen" class="screen">
   <div class="ref-header">
-    <button class="back-btn" onclick="goHome()">← もどる</button>
+    <button class="back-btn" onclick="goSection()">← もどる</button>
     <h2 id="ref-title"></h2>
   </div>
   <div class="ref-body">
@@ -674,7 +760,7 @@
 <!-- ===== QUIZ ===== -->
 <div id="quiz-screen" class="screen">
   <div class="quiz-header">
-    <button class="back-btn" onclick="goHome()">← もどる</button>
+    <button class="back-btn" onclick="goSection()">← もどる</button>
     <h2 id="quiz-title"></h2>
   </div>
   <div class="quiz-body">
@@ -688,9 +774,7 @@
       <div class="question-text" id="question-text"></div>
     </div>
 
-    <div class="answer-card" id="answer-card">
-      <!-- inputs injected by module -->
-    </div>
+    <div class="answer-card" id="answer-card"></div>
 
     <button class="submit-btn" id="submit-btn" onclick="checkAnswer()">こたえあわせ</button>
 
@@ -701,7 +785,7 @@
     </div>
 
     <div class="explanation-card hidden" id="explanation-card">
-      <div class="explanation-title">かいせつ（面積図）</div>
+      <div class="explanation-title" id="explanation-title">かいせつ</div>
       <div class="area-diagram" id="area-diagram"></div>
       <div class="steps-list" id="steps-list"></div>
     </div>
@@ -712,13 +796,32 @@
 
 <script>
 // ============================================================
+//  UTILS
+// ============================================================
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function gcdCalc(a, b) {
+  while (b) { const t = b; b = a % b; a = t; }
+  return a;
+}
+
+function lcmCalc(a, b) {
+  return a / gcdCalc(a, b) * b;
+}
+
+function getFactors(n) {
+  const f = [];
+  for (let i = 1; i <= n; i++) { if (n % i === 0) f.push(i); }
+  return f;
+}
+
+// ============================================================
 //  MODULE REGISTRY
 // ============================================================
 const modules = [];
-
-function registerModule(mod) {
-  modules.push(mod);
-}
+function registerModule(mod) { modules.push(mod); }
 
 // ============================================================
 //  鶴亀算 MODULE
@@ -731,17 +834,11 @@ registerModule({
   _level: 'basic',
   _current: null,
 
-  generate() {
-    return this._level === 'basic' ? this._genBasic() : this._genApplied();
-  },
+  generate() { return this._level === 'basic' ? this._genBasic() : this._genApplied(); },
 
-  // ---- basic: つる(足2) vs かめ(足4) ----
   _genBasic() {
-    const N   = randInt(6, 18);
-    const nA  = randInt(1, N - 1);
-    const nB  = N - nA;
-    const valA = 2, valB = 4;
-    const S   = nA * valA + nB * valB;
+    const N = randInt(6, 18), nA = randInt(1, N - 1), nB = N - nA;
+    const valA = 2, valB = 4, S = nA * valA + nB * valB;
     this._current = { N, nA, nB, valA, valB, S,
       nameA: 'つる', unitA: 'わ', nameB: 'かめ', unitB: 'ひき', unitS: '本' };
     return {
@@ -753,18 +850,14 @@ registerModule({
     };
   },
 
-  // ---- applied: 3テンプレートからランダム ----
   _genApplied() {
     const tpls = [this._tplBike, this._tplCoins, this._tplStationery];
     return tpls[randInt(0, tpls.length - 1)].call(this);
   },
 
   _tplBike() {
-    const N   = randInt(5, 14);
-    const nA  = randInt(1, N - 1);
-    const nB  = N - nA;
-    const valA = 2, valB = 3;
-    const S   = nA * valA + nB * valB;
+    const N = randInt(5, 14), nA = randInt(1, N - 1), nB = N - nA;
+    const valA = 2, valB = 3, S = nA * valA + nB * valB;
     this._current = { N, nA, nB, valA, valB, S,
       nameA: 'じてんしゃ', unitA: 'だい', nameB: 'さんりんしゃ', unitB: 'だい', unitS: '本' };
     return {
@@ -777,11 +870,8 @@ registerModule({
   },
 
   _tplCoins() {
-    const N   = randInt(5, 14);
-    const nA  = randInt(1, N - 1);
-    const nB  = N - nA;
-    const valA = 10, valB = 50;
-    const S   = nA * valA + nB * valB;
+    const N = randInt(5, 14), nA = randInt(1, N - 1), nB = N - nA;
+    const valA = 10, valB = 50, S = nA * valA + nB * valB;
     this._current = { N, nA, nB, valA, valB, S,
       nameA: '10円玉', unitA: 'まい', nameB: '50円玉', unitB: 'まい', unitS: '円' };
     return {
@@ -798,10 +888,8 @@ registerModule({
     const eraserPrices = [80, 90, 100, 120, 150];
     const valA = pencilPrices[randInt(0, pencilPrices.length - 1)];
     const valB = eraserPrices[randInt(0, eraserPrices.length - 1)];
-    const N   = randInt(5, 12);
-    const nA  = randInt(1, N - 1);
-    const nB  = N - nA;
-    const S   = nA * valA + nB * valB;
+    const N = randInt(5, 12), nA = randInt(1, N - 1), nB = N - nA;
+    const S = nA * valA + nB * valB;
     this._current = { N, nA, nB, valA, valB, S,
       nameA: 'えんぴつ', unitA: '本', nameB: '消しゴム', unitB: 'こ', unitS: '円' };
     return {
@@ -823,13 +911,189 @@ registerModule({
     };
   },
 
-  explain() {
-    return { ...this._current };
-  },
+  explain() { return { type: 'area', ...this._current }; },
 });
 
 // ============================================================
-//  COMING SOON MODULES (placeholder entries)
+//  最大公約数 MODULE
+// ============================================================
+registerModule({
+  id: 'gcd',
+  name: '最大公約数',
+  icon: '🔵',
+  unlocked: true,
+  _level: 'basic',
+  _current: null,
+
+  generate() { return this._level === 'basic' ? this._genBasic() : this._genApplied(); },
+
+  _genBasic() {
+    const gList = [2,3,4,5,6,7,8,9,10,12];
+    const g = gList[randInt(0, gList.length - 1)];
+    const coprimes = [[1,2],[1,3],[2,3],[1,4],[3,4],[1,5],[2,5],[3,5],[1,6],[5,6],[2,7],[3,7]];
+    const [p, q] = coprimes[randInt(0, coprimes.length - 1)];
+    const a = g * p, b = g * q;
+    this._current = { a, b, g };
+    return {
+      text: `<span class="num">${a}</span> と <span class="num">${b}</span> の<br>最大公約数は？`,
+      inputs: [{ id: 'ans-A', label: '最大公約数', unit: '' }],
+    };
+  },
+
+  _genApplied() {
+    const tpls = [this._tplBag, this._tplTape];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _tplBag() {
+    const g = randInt(2, 8);
+    const coprimes = [[2,3],[3,4],[2,5],[3,5],[4,5],[3,7],[2,7],[5,7]];
+    const [p, q] = coprimes[randInt(0, coprimes.length - 1)];
+    const a = g * p, b = g * q;
+    this._current = { a, b, g };
+    return {
+      text: `みかんが <span class="num">${a}</span>個、りんごが <span class="num">${b}</span>個あります。<br>あまりが出ないよう同じ数ずつ袋に入れるとき、<br>最多で何袋に分けられますか？`,
+      inputs: [{ id: 'ans-A', label: '袋の数', unit: '袋' }],
+    };
+  },
+
+  _tplTape() {
+    const g = randInt(3, 12);
+    const coprimes = [[2,3],[3,4],[2,5],[3,5],[4,5],[3,7],[2,7]];
+    const [p, q] = coprimes[randInt(0, coprimes.length - 1)];
+    const a = g * p, b = g * q;
+    this._current = { a, b, g };
+    return {
+      text: `赤いテープが <span class="num">${a}</span>cm、<br>青いテープが <span class="num">${b}</span>cmあります。<br>同じ長さに切るとき、最長は何cmですか？`,
+      inputs: [{ id: 'ans-A', label: '長さ', unit: 'cm' }],
+    };
+  },
+
+  checkAnswer() {
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    return { correct: a === this._current.g, explanation: `最大公約数 = ${this._current.g}` };
+  },
+
+  explain() { return { type: 'gcd', ...this._current }; },
+});
+
+// ============================================================
+//  最小公倍数 MODULE
+// ============================================================
+registerModule({
+  id: 'lcm',
+  name: '最小公倍数',
+  icon: '🟢',
+  unlocked: true,
+  _level: 'basic',
+  _current: null,
+
+  generate() { return this._level === 'basic' ? this._genBasic() : this._genApplied(); },
+
+  _genBasic() {
+    const pairs = [[2,3],[3,4],[4,6],[2,5],[3,5],[4,5],[5,6],[6,8],[4,9],[6,9],[3,8],[8,12]];
+    const [a, b] = pairs[randInt(0, pairs.length - 1)];
+    const l = lcmCalc(a, b);
+    this._current = { a, b, l };
+    return {
+      text: `<span class="num">${a}</span> と <span class="num">${b}</span> の<br>最小公倍数は？`,
+      inputs: [{ id: 'ans-A', label: '最小公倍数', unit: '' }],
+    };
+  },
+
+  _genApplied() {
+    const tpls = [this._tplLibrary, this._tplLight];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _tplLibrary() {
+    const pairs = [[2,3],[3,4],[4,6],[2,5],[3,5],[4,5],[5,6],[6,8],[4,9],[6,9],[3,8]];
+    const [a, b] = pairs[randInt(0, pairs.length - 1)];
+    const l = lcmCalc(a, b);
+    this._current = { a, b, l };
+    return {
+      text: `Aくんは <span class="num">${a}</span>日ごと、Bくんは <span class="num">${b}</span>日ごとに<br>図書館に来ます。今日いっしょに来たとき、<br>次にいっしょになるのは何日後ですか？`,
+      inputs: [{ id: 'ans-A', label: '日数', unit: '日後' }],
+    };
+  },
+
+  _tplLight() {
+    const pairs = [[2,3],[3,4],[4,6],[2,5],[3,5],[4,5],[5,6],[6,8],[4,9],[6,9],[3,8]];
+    const [a, b] = pairs[randInt(0, pairs.length - 1)];
+    const l = lcmCalc(a, b);
+    this._current = { a, b, l };
+    return {
+      text: `赤ランプは <span class="num">${a}</span>秒ごと、<br>青ランプは <span class="num">${b}</span>秒ごとに点滅します。<br>同時に点滅した後、次に同時になるのは何秒後？`,
+      inputs: [{ id: 'ans-A', label: '秒数', unit: '秒後' }],
+    };
+  },
+
+  checkAnswer() {
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    return { correct: a === this._current.l, explanation: `最小公倍数 = ${this._current.l}` };
+  },
+
+  explain() { return { type: 'lcm', ...this._current }; },
+});
+
+// ============================================================
+//  等差数列 MODULE
+// ============================================================
+registerModule({
+  id: 'arithmetic',
+  name: '等差数列',
+  icon: '📈',
+  unlocked: true,
+  _level: 'basic',
+  _current: null,
+
+  generate() { return this._level === 'basic' ? this._genBasic() : this._genApplied(); },
+
+  _genBasic() {
+    const a = randInt(1, 15), d = randInt(2, 8), n = randInt(4, 10);
+    const answer = a + (n - 1) * d;
+    this._current = { a, d, n, answer, subtype: 'nth' };
+    return {
+      text: `はじめの数が <span class="num">${a}</span> で、<span class="num">${d}</span> ずつ増える<br>数列があります。<br>第 <span class="num">${n}</span> 項はいくつですか？`,
+      inputs: [{ id: 'ans-A', label: `第${n}項`, unit: '' }],
+    };
+  },
+
+  _genApplied() {
+    return randInt(0, 1) === 0 ? this._tplCount() : this._tplSum();
+  },
+
+  _tplCount() {
+    const a = randInt(1, 10), d = randInt(2, 7), count = randInt(4, 10);
+    const last = a + (count - 1) * d;
+    this._current = { a, d, n: count, answer: count, subtype: 'count', last };
+    return {
+      text: `はじめの数が <span class="num">${a}</span> で、<span class="num">${d}</span> ずつ増える<br>数列があります。<br><span class="num">${last}</span> は第何項ですか？`,
+      inputs: [{ id: 'ans-A', label: '何項め', unit: '項め' }],
+    };
+  },
+
+  _tplSum() {
+    const a = randInt(1, 10), d = randInt(2, 6), n = randInt(4, 8);
+    const last = a + (n - 1) * d;
+    const answer = n * (a + last) / 2;
+    this._current = { a, d, n, answer, subtype: 'sum', last };
+    return {
+      text: `はじめの数が <span class="num">${a}</span> で、<span class="num">${d}</span> ずつ増える<br>数列の、第 <span class="num">${n}</span> 項までの<br>合計はいくつですか？`,
+      inputs: [{ id: 'ans-A', label: '合計', unit: '' }],
+    };
+  },
+
+  checkAnswer() {
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    return { correct: a === this._current.answer, explanation: `こたえ = ${this._current.answer}` };
+  },
+
+  explain() { return { type: 'arithmetic', ...this._current }; },
+});
+
+// ============================================================
+//  COMING SOON (特殊算)
 // ============================================================
 [
   { id: 'tabibito', name: '旅人算',   icon: '🚶' },
@@ -840,12 +1104,101 @@ registerModule({
 ].forEach(m => registerModule({ ...m, unlocked: false, generate: null, checkAnswer: null }));
 
 // ============================================================
-//  HOME SCREEN — render tiles
+//  SECTIONS
 // ============================================================
-function renderHome() {
+const sections = [
+  {
+    id: 'baisu-yakusu',
+    name: '倍数・約数',
+    icon: '🔢',
+    color: '#7b4ea0',
+    desc: '最大公約数・最小公倍数',
+    moduleIds: ['gcd', 'lcm'],
+  },
+  {
+    id: 'tosasuuretsu',
+    name: '等差数列',
+    icon: '📈',
+    color: '#27ae60',
+    desc: '規則的にならぶ数を調べよう',
+    moduleIds: ['arithmetic'],
+  },
+  {
+    id: 'tokushuzan',
+    name: '特殊算',
+    icon: '🐢',
+    color: '#4a90d9',
+    desc: '鶴亀算・旅人算など',
+    moduleIds: ['tsurukame', 'tabibito', 'ueki', 'ryusui', 'sasume', 'kafusoku'],
+  },
+];
+
+let activeSection = null;
+let activeModule = null;
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goTop() {
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  activeModule = null;
+  activeSection = null;
+  showScreen('top-screen');
+}
+
+function goSection() {
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  activeModule = null;
+  if (activeSection) {
+    showScreen('section-screen');
+  } else {
+    goTop();
+  }
+}
+
+function showSection(sectionId) {
+  activeSection = sections.find(s => s.id === sectionId);
+  if (!activeSection) return;
+  renderSection();
+  showScreen('section-screen');
+}
+
+function renderTop() {
+  const list = document.getElementById('categories-list');
+  list.innerHTML = '';
+  sections.forEach(sec => {
+    const card = document.createElement('div');
+    card.className = 'category-card';
+    card.style.borderLeftColor = sec.color;
+    card.innerHTML = `
+      <div class="cat-icon">${sec.icon}</div>
+      <div class="cat-info">
+        <div class="cat-name">${sec.name}</div>
+        <div class="cat-desc">${sec.desc}</div>
+      </div>
+      <div class="cat-arrow">›</div>`;
+    card.onclick = () => showSection(sec.id);
+    list.appendChild(card);
+  });
+}
+
+function renderSection() {
+  if (!activeSection) return;
+
+  // header color
+  const header = document.getElementById('section-header');
+  header.style.background = activeSection.color;
+  document.getElementById('section-title').textContent = activeSection.name;
+
+  const sectionModules = activeSection.moduleIds.map(id => modules.find(m => m.id === id)).filter(Boolean);
   const grid = document.getElementById('modules-grid');
   grid.innerHTML = '';
-  modules.forEach(mod => {
+  sectionModules.forEach(mod => {
     const tile = document.createElement('div');
     tile.className = 'module-tile ' + (mod.unlocked ? 'unlocked' : 'locked');
     const hasRef = !!REF_CONTENT[mod.id];
@@ -868,27 +1221,10 @@ function renderHome() {
   });
 }
 
-// ============================================================
-//  NAVIGATION
-// ============================================================
-let activeModule = null;
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function goHome() {
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-  activeModule = null;
-  showScreen('home-screen');
-}
-
 function startModule(id) {
   activeModule = modules.find(m => m.id === id);
   if (!activeModule) return;
   document.getElementById('quiz-title').textContent = activeModule.name;
-  // reset to basic level
   if (activeModule._level !== undefined) activeModule._level = 'basic';
   document.getElementById('btn-basic').classList.add('active');
   document.getElementById('btn-applied').classList.remove('active');
@@ -909,10 +1245,8 @@ function setLevel(level) {
 // ============================================================
 function loadQuestion() {
   const q = activeModule.generate();
-
   document.getElementById('question-text').innerHTML = q.text;
 
-  // build inputs
   const card = document.getElementById('answer-card');
   card.innerHTML = '';
   q.inputs.forEach(inp => {
@@ -924,11 +1258,7 @@ function loadQuestion() {
       <span class="answer-unit">${inp.unit}</span>`;
     card.appendChild(row);
   });
-  // focus first input after short delay (iOS keyboard)
-  setTimeout(() => {
-    const first = card.querySelector('input');
-    if (first) first.focus();
-  }, 300);
+  setTimeout(() => { const f = card.querySelector('input'); if (f) f.focus(); }, 300);
 
   document.getElementById('submit-btn').classList.remove('hidden');
   document.getElementById('result-card').classList.add('hidden');
@@ -955,16 +1285,14 @@ function checkAnswer() {
     ans.textContent   = 'こたえ：' + result.explanation;
   }
 
-  // save record
   saveRecord(activeModule.id, activeModule._level || 'basic', result.correct);
 
   document.getElementById('submit-btn').classList.add('hidden');
   document.getElementById('result-card').classList.remove('hidden');
 
-  // show explanation if the module supports it
   if (activeModule.explain) {
     const expData = activeModule.explain();
-    renderExplanation(expData);
+    renderExplanation(expData, 'area-diagram', 'steps-list', 'explanation-title');
     document.getElementById('explanation-card').classList.remove('hidden');
     setTimeout(() => {
       document.getElementById('explanation-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -974,9 +1302,7 @@ function checkAnswer() {
   document.getElementById('next-btn').classList.remove('hidden');
 }
 
-function nextQuestion() {
-  loadQuestion();
-}
+function nextQuestion() { loadQuestion(); }
 
 // ============================================================
 //  RECORDS
@@ -1000,12 +1326,17 @@ function saveRecord(moduleId, level, correct) {
 let chartInstance = null;
 
 function showGraph() {
+  const title = activeSection ? activeSection.name + ' のきろく' : 'きろく';
+  document.getElementById('graph-title').textContent = title;
   showScreen('graph-screen');
   renderGraph();
 }
 
 function renderGraph() {
-  const recs = loadRecords();
+  const sectionModuleIds = activeSection ? new Set(activeSection.moduleIds) : null;
+  let recs = loadRecords();
+  if (sectionModuleIds) recs = recs.filter(r => sectionModuleIds.has(r.moduleId));
+
   const total   = recs.length;
   const correct = recs.filter(r => r.correct).length;
   const pct     = total ? Math.round(correct / total * 100) : null;
@@ -1019,14 +1350,12 @@ function renderGraph() {
   document.getElementById('g-accuracy').textContent = pct !== null ? pct + '%' : '-%';
   document.getElementById('g-streak').textContent   = streak + '問';
 
-  // recent dots (newest first, up to 20)
-  const recent  = recs.slice(-20).reverse();
-  const dotsEl  = document.getElementById('g-dots');
+  const recent = recs.slice(-20).reverse();
+  const dotsEl = document.getElementById('g-dots');
   dotsEl.innerHTML = recent.length
     ? recent.map(r => `<span class="result-dot">${r.correct ? '⭕' : '❌'}</span>`).join('')
     : '<span class="no-records">まだ きろくがありません</span>';
 
-  // bar chart: basic vs applied
   const basic   = recs.filter(r => r.level === 'basic');
   const applied = recs.filter(r => r.level === 'applied');
   const bAcc    = basic.length   ? Math.round(basic.filter(r=>r.correct).length   / basic.length   * 100) : null;
@@ -1069,8 +1398,14 @@ function renderGraph() {
 }
 
 function clearRecords() {
-  if (!confirm('きろくを ぜんぶ けしますか？')) return;
-  localStorage.removeItem(RECORDS_KEY);
+  if (!confirm('このセクションのきろくを ぜんぶ けしますか？')) return;
+  if (activeSection) {
+    const ids = new Set(activeSection.moduleIds);
+    const kept = loadRecords().filter(r => !ids.has(r.moduleId));
+    localStorage.setItem(RECORDS_KEY, JSON.stringify(kept));
+  } else {
+    localStorage.removeItem(RECORDS_KEY);
+  }
   renderGraph();
 }
 
@@ -1080,11 +1415,32 @@ function clearRecords() {
 const REF_CONTENT = {
   tsurukame: {
     title: '鶴亀算',
-    concept: `<b>つるとかめ</b>のように、<b>2しゅるい</b>のものが まざっているとき、<br>それぞれ 何びきか もとめる計算です。<br>足の数（や 金がく・タイヤの数など）が ヒントになります。`,
-    method: `ぜんぶ <b>かめ（大きい方）</b> だと かりてかんがえ、<br>じっさいとのちがいから <b>つるの数をもとめる</b> 方法をつかいます。`,
+    concept: `<b>つるとかめ</b>のように、<b>2しゅるい</b>のものが まざっているとき、<br>それぞれ 何びきか もとめる計算です。<br>足の数などが ヒントになります。`,
+    method: `ぜんぶ <b>かめ（大きい方）</b> だとかりてかんがえ、<br>じっさいとのちがいから <b>つるの数をもとめる</b> 方法をつかいます。`,
     exQ: `つるとかめが あわせて <b>7ひき</b>、あしは あわせて <b>22本</b>。<br>それぞれ 何びき？`,
-    example: { N: 7, nA: 3, nB: 4, valA: 2, valB: 4, S: 22,
+    example: { type: 'area', N: 7, nA: 3, nB: 4, valA: 2, valB: 4, S: 22,
                nameA: 'つる', unitA: 'わ', nameB: 'かめ', unitB: 'ひき', unitS: '本' },
+  },
+  gcd: {
+    title: '最大公約数',
+    concept: `2つ以上の数を<b>わり切ることができる</b>数を「<b>公約数</b>」といいます。<br>その中でいちばん大きい数が<b>最大公約数</b>です。`,
+    method: `それぞれの数の<b>約数（割り切れる数）を全部書き出し</b>、<br>共通する数のうち<b>いちばん大きいもの</b>を選びます。`,
+    exQ: `<b>12</b> と <b>18</b> の最大公約数は？`,
+    example: { type: 'gcd', a: 12, b: 18, g: 6 },
+  },
+  lcm: {
+    title: '最小公倍数',
+    concept: `2つ以上の数の<b>どちらにも割り切れる</b>数を「<b>公倍数</b>」といいます。<br>その中でいちばん小さい数が<b>最小公倍数</b>です。`,
+    method: `それぞれの数の<b>倍数（×1, ×2, ×3…）を書き出し</b>、<br>最初に<b>共通する数</b>を見つけます。`,
+    exQ: `<b>4</b> と <b>6</b> の最小公倍数は？`,
+    example: { type: 'lcm', a: 4, b: 6, l: 12 },
+  },
+  arithmetic: {
+    title: '等差数列',
+    concept: `一定の数ずつ増える（または減る）数の並びを<b>等差数列</b>といいます。<br>増え方の数を<b>公差</b>、最初の数を<b>初項</b>といいます。`,
+    method: `第<em>n</em>項 ＝ 初項 ＋ (n－1) × 公差<br>合計 ＝ (初項 ＋ 末項) × 項数 ÷ 2`,
+    exQ: `はじめの数が <b>3</b>、公差 <b>4</b> の数列の第 <b>5</b> 項は？`,
+    example: { type: 'arithmetic', a: 3, d: 4, n: 5, answer: 19, subtype: 'nth' },
   },
 };
 
@@ -1095,111 +1451,68 @@ function showReference(moduleId) {
   document.getElementById('ref-concept').innerHTML  = c.concept;
   document.getElementById('ref-method').innerHTML   = c.method;
   document.getElementById('ref-q').innerHTML        = c.exQ;
-  document.getElementById('ref-diagram').innerHTML  = buildSVGDiagram(c.example);
-  const list = document.getElementById('ref-steps');
-  list.innerHTML = '';
-  buildStepItems(c.example).forEach((s, i) => {
-    const row = document.createElement('div');
-    row.className = 'step-row';
-    row.innerHTML = `<div class="step-num">${i + 1}</div><div class="step-text">${s}</div>`;
-    list.appendChild(row);
-  });
+  renderExplanation(c.example, 'ref-diagram', 'ref-steps', null);
   showScreen('ref-screen');
 }
 
 // ============================================================
-//  EXPLANATION RENDERER  （一般化版）
+//  EXPLANATION RENDERERS
 // ============================================================
-function buildSVGDiagram({ N, nA, nB, valA, valB, S,
-                            nameA, unitA, nameB, unitB, unitS }) {
+
+// --- Area diagram (鶴亀算) ---
+function buildSVGDiagram({ N, nA, nB, valA, valB, S, nameA, unitA, nameB, unitB, unitS }) {
   const diff   = N * valB - S;
   const spread = valB - valA;
 
-  // ---- SVG area diagram ----
-  const PAD_L = 58;   // wider to fit "150円" labels
-  const PAD_R = 12;
-  const PAD_T = 14;
-  const PAD_B = 42;
-  const W = 300;
-  const H = 120;      // total height = valB units
-
-  const vbW = PAD_L + W + PAD_R;
-  const vbH = PAD_T + H + PAD_B;
-
-  const unitW = W / N;
-  const unitH = H / valB;   // px per 1 value unit
-
+  const PAD_L = 58, PAD_R = 12, PAD_T = 14, PAD_B = 42;
+  const W = 300, H = 120;
+  const vbW = PAD_L + W + PAD_R, vbH = PAD_T + H + PAD_B;
+  const unitW = W / N, unitH = H / valB;
   const x0 = PAD_L, y0 = PAD_T;
-
   const aW = nA * unitW, bW = nB * unitW;
-  const aX = x0,         bX = x0 + aW;
+  const aX = x0, bX = x0 + aW;
 
-  const COL_A    = '#378ADD';
-  const COL_B    = '#5a9e28';
-  const COL_RED  = '#E24B4A';
-  const COL_GRID = '#dde3ea';
-  const COL_TEXT = '#2c3e50';
-  const COL_MUTED= '#7f8c8d';
+  const COL_A = '#378ADD', COL_B = '#5a9e28', COL_RED = '#E24B4A';
+  const COL_GRID = '#dde3ea', COL_TEXT = '#2c3e50', COL_MUTED = '#7f8c8d';
 
-  // A filled (bottom valA rows)
-  const aFillH = valA * unitH;
-  const aFillY = y0 + H - aFillH;
-  // red dashed (top spread rows of A columns)
-  const redH = spread * unitH;
-  const redY = y0;
-  // B filled (full height)
-  const bFillY = y0, bFillH = H;
+  const aFillH = valA * unitH, aFillY = y0 + H - aFillH;
+  const redH = spread * unitH, redY = y0;
 
   let svg = `<svg viewBox="0 0 ${vbW} ${vbH}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#f8fafc;border-radius:10px;">
-  <defs>
-    <pattern id="dp" width="6" height="6" patternUnits="userSpaceOnUse">
-      <rect width="6" height="6" fill="#fde8e8"/>
-      <line x1="0" y1="0" x2="6" y2="6" stroke="${COL_RED}" stroke-width="0.8" opacity="0.5"/>
-    </pattern>
-  </defs>`;
+  <defs><pattern id="dp" width="6" height="6" patternUnits="userSpaceOnUse">
+    <rect width="6" height="6" fill="#fde8e8"/>
+    <line x1="0" y1="0" x2="6" y2="6" stroke="${COL_RED}" stroke-width="0.8" opacity="0.5"/>
+  </pattern></defs>`;
 
-  // filled regions
-  svg += `<rect x="${bX}" y="${bFillY}" width="${bW}" height="${bFillH}" fill="${COL_B}" opacity="0.75" rx="2"/>`;
+  svg += `<rect x="${bX}" y="${y0}" width="${bW}" height="${H}" fill="${COL_B}" opacity="0.75" rx="2"/>`;
   svg += `<rect x="${aX}" y="${aFillY}" width="${aW}" height="${aFillH}" fill="${COL_A}" opacity="0.82" rx="2"/>`;
-  svg += `<rect x="${aX}" y="${redY}"   width="${aW}" height="${redH}"   fill="url(#dp)" rx="2"/>`;
-  svg += `<rect x="${aX}" y="${redY}"   width="${aW}" height="${redH}"   fill="none" stroke="${COL_RED}" stroke-width="1.5" stroke-dasharray="4 3" rx="2"/>`;
+  svg += `<rect x="${aX}" y="${redY}" width="${aW}" height="${redH}" fill="url(#dp)" rx="2"/>`;
+  svg += `<rect x="${aX}" y="${redY}" width="${aW}" height="${redH}" fill="none" stroke="${COL_RED}" stroke-width="1.5" stroke-dasharray="4 3" rx="2"/>`;
 
-  // grid lines at 0, valA, valB
   [0, valA, valB].forEach(v => {
     const gy = y0 + H - v * unitH;
-    const isBold = v === 0 || v === valB;
-    svg += `<line x1="${x0}" y1="${gy}" x2="${x0 + W}" y2="${gy}" stroke="${COL_GRID}" stroke-width="${isBold ? 1.5 : 0.7}"/>`;
+    svg += `<line x1="${x0}" y1="${gy}" x2="${x0+W}" y2="${gy}" stroke="${COL_GRID}" stroke-width="${v===0||v===valB?1.5:0.7}"/>`;
   });
-  // vertical divider
-  svg += `<line x1="${bX}" y1="${y0}" x2="${bX}" y2="${y0 + H}" stroke="${COL_GRID}" stroke-width="1.2" stroke-dasharray="3 2"/>`;
+  svg += `<line x1="${bX}" y1="${y0}" x2="${bX}" y2="${y0+H}" stroke="${COL_GRID}" stroke-width="1.2" stroke-dasharray="3 2"/>`;
+  svg += `<line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0+H}" stroke="${COL_TEXT}" stroke-width="1.5"/>`;
+  svg += `<text x="${x0-5}" y="${y0+H}" text-anchor="end" font-size="9" fill="${COL_MUTED}" dominant-baseline="middle">0</text>`;
+  svg += `<text x="${x0-5}" y="${y0+H-aFillH}" text-anchor="end" font-size="9" fill="${COL_MUTED}" dominant-baseline="middle">${valA}${unitS}</text>`;
+  svg += `<text x="${x0-5}" y="${y0}" text-anchor="end" font-size="9" fill="${COL_MUTED}" dominant-baseline="middle">${valB}${unitS}</text>`;
 
-  // Y-axis
-  svg += `<line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0 + H}" stroke="${COL_TEXT}" stroke-width="1.5"/>`;
-  svg += `<text x="${x0-5}" y="${y0 + H}"              text-anchor="end" font-size="9" fill="${COL_MUTED}" dominant-baseline="middle">0</text>`;
-  svg += `<text x="${x0-5}" y="${y0 + H - aFillH}"     text-anchor="end" font-size="9" fill="${COL_MUTED}" dominant-baseline="middle">${valA}${unitS}</text>`;
-  svg += `<text x="${x0-5}" y="${y0}"                  text-anchor="end" font-size="9" fill="${COL_MUTED}" dominant-baseline="middle">${valB}${unitS}</text>`;
-
-  // region labels
   if (aW > 22) svg += `<text x="${aX+aW/2}" y="${aFillY+aFillH/2}" text-anchor="middle" font-size="11" font-weight="bold" fill="white" dominant-baseline="middle">${nameA}</text>`;
-  if (bW > 22) svg += `<text x="${bX+bW/2}" y="${bFillY+bFillH/2}" text-anchor="middle" font-size="11" font-weight="bold" fill="white" dominant-baseline="middle">${nameB}</text>`;
-  if (aW > 30) svg += `<text x="${aX+aW/2}" y="${redY+redH/2}"     text-anchor="middle" font-size="10" font-weight="bold" fill="${COL_RED}" dominant-baseline="middle">${diff}${unitS}へらす</text>`;
+  if (bW > 22) svg += `<text x="${bX+bW/2}" y="${y0+H/2}" text-anchor="middle" font-size="11" font-weight="bold" fill="white" dominant-baseline="middle">${nameB}</text>`;
+  if (aW > 30) svg += `<text x="${aX+aW/2}" y="${redY+redH/2}" text-anchor="middle" font-size="10" font-weight="bold" fill="${COL_RED}" dominant-baseline="middle">${diff}${unitS}へらす</text>`;
 
-  // bottom labels
   const labelY = y0 + H + 16;
   svg += `<text x="${aX+aW/2}" y="${labelY}" text-anchor="middle" font-size="11" fill="${COL_A}" font-weight="bold">${nameA} ${nA}${unitA}</text>`;
   svg += `<text x="${bX+bW/2}" y="${labelY}" text-anchor="middle" font-size="11" fill="${COL_B}" font-weight="bold">${nameB} ${nB}${unitB}</text>`;
-
-  // X-axis
   svg += `<line x1="${x0}" y1="${y0+H}" x2="${x0+W}" y2="${y0+H}" stroke="${COL_TEXT}" stroke-width="1.5"/>`;
   svg += `</svg>`;
   return svg;
 }
 
-function buildStepItems({ N, nA, nB, valA, valB, S,
-                           nameA, unitA, nameB, unitB, unitS }) {
-  const diff   = N * valB - S;
-  const allB   = N * valB;
-  const spread = valB - valA;
+function buildStepItems({ N, nA, nB, valA, valB, S, nameA, unitA, nameB, unitB, unitS }) {
+  const diff = N * valB - S, allB = N * valB, spread = valB - valA;
   return [
     `ぜんぶ <span class="green">${nameB}</span> だとすると…<br><em>${N}</em> × <em>${valB}</em> = <em>${allB}</em>${unitS}`,
     `じっさいは <em>${S}</em>${unitS}。ちがいは<br><em>${allB}</em> − <em>${S}</em> = <span class="red">${diff}</span>${unitS}`,
@@ -1208,32 +1521,148 @@ function buildStepItems({ N, nA, nB, valA, valB, S,
   ];
 }
 
-function renderExplanation(params) {
-  document.getElementById('area-diagram').innerHTML = buildSVGDiagram(params);
-  const list = document.getElementById('steps-list');
-  list.innerHTML = '';
-  buildStepItems(params).forEach((s, i) => {
-    const row = document.createElement('div');
-    row.className = 'step-row';
-    row.innerHTML = `<div class="step-num">${i + 1}</div><div class="step-text">${s}</div>`;
-    list.appendChild(row);
-  });
+// --- GCD visual ---
+function buildGCDVisual(a, b, g) {
+  const fA = getFactors(a), fB = getFactors(b);
+  const commonSet = new Set(fA.filter(f => fB.includes(f)));
+  function chips(factors) {
+    return factors.map(f => {
+      let cls = 'factor-chip';
+      if (f === g) cls += ' factor-max';
+      else if (commonSet.has(f)) cls += ' common';
+      return `<span class="${cls}">${f}</span>`;
+    }).join('');
+  }
+  return `<div class="factor-visual">
+    <div class="factor-row"><span class="factor-label">${a}の約数</span><div class="factor-chips">${chips(fA)}</div></div>
+    <div class="factor-row"><span class="factor-label">${b}の約数</span><div class="factor-chips">${chips(fB)}</div></div>
+    <div class="factor-answer">最大公約数 → <strong>${g}</strong></div>
+  </div>`;
 }
 
-// ============================================================
-//  UTILS
-// ============================================================
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function buildGCDSteps(a, b, g) {
+  const fA = getFactors(a), fB = getFactors(b);
+  const common = fA.filter(f => fB.includes(f));
+  return [
+    `<em>${a}</em> の約数：${fA.join('、')}`,
+    `<em>${b}</em> の約数：${fB.join('、')}`,
+    `共通の約数：<em>${common.join('、')}</em>`,
+    `いちばん大きい共通の約数 = <em>${g}</em>`,
+  ];
+}
+
+// --- LCM visual ---
+function buildLCMVisual(a, b, l) {
+  const mA = [], mB = [];
+  for (let i = 1; i * a <= l; i++) mA.push(i * a);
+  for (let i = 1; i * b <= l; i++) mB.push(i * b);
+  function chips(mults) {
+    return mults.map(m => `<span class="factor-chip${m === l ? ' lcm-match' : ''}">${m}</span>`).join('');
+  }
+  return `<div class="factor-visual">
+    <div class="factor-row"><span class="factor-label">${a}の倍数</span><div class="factor-chips">${chips(mA)}</div></div>
+    <div class="factor-row"><span class="factor-label">${b}の倍数</span><div class="factor-chips">${chips(mB)}</div></div>
+    <div class="factor-answer">最小公倍数 → <strong>${l}</strong></div>
+  </div>`;
+}
+
+function buildLCMSteps(a, b, l) {
+  const mA = [], mB = [];
+  for (let i = 1; i * a <= l; i++) mA.push(i * a);
+  for (let i = 1; i * b <= l; i++) mB.push(i * b);
+  return [
+    `<em>${a}</em> の倍数：${mA.join('、')}、…`,
+    `<em>${b}</em> の倍数：${mB.join('、')}、…`,
+    `最初に共通する数 = <em>${l}</em>`,
+    `<em>${l}</em> ÷ <em>${a}</em> = <em>${l/a}</em>、<em>${l}</em> ÷ <em>${b}</em> = <em>${l/b}</em>（割り切れる ✓）`,
+  ];
+}
+
+// --- Arithmetic visual ---
+function buildSeqVisual(a, d, n) {
+  const count = Math.min(n, 6);
+  const terms = Array.from({ length: count }, (_, i) => a + i * d);
+  let html = '<div class="seq-visual">';
+  terms.forEach((t, i) => {
+    html += `<div class="seq-item"><div class="seq-val">${t}</div><div class="seq-idx">第${i+1}項</div></div>`;
+    if (i < count - 1) html += `<div class="seq-arrow">+${d}</div>`;
+  });
+  if (n > count) html += `<div class="seq-ellipsis">…</div>`;
+  html += '</div>';
+  return html;
+}
+
+function buildArithmeticSteps({ a, d, n, answer, subtype, last }) {
+  if (subtype === 'nth') {
+    return [
+      `初項（はじめの数） = <em>${a}</em>、公差（増え方） = <em>${d}</em>`,
+      `第 <em>${n}</em> 項 = 初項 + (項数 − 1) × 公差`,
+      `= <em>${a}</em> + (<em>${n}</em> − 1) × <em>${d}</em>`,
+      `= <em>${a}</em> + <em>${(n-1)*d}</em> = <em>${answer}</em>`,
+    ];
+  } else if (subtype === 'count') {
+    return [
+      `初項 = <em>${a}</em>、公差 = <em>${d}</em>`,
+      `<em>${last}</em> は第何項か → (末項 − 初項) ÷ 公差 + 1`,
+      `= (<em>${last}</em> − <em>${a}</em>) ÷ <em>${d}</em> + 1`,
+      `= <em>${last - a}</em> ÷ <em>${d}</em> + 1 = <em>${answer}</em>項め`,
+    ];
+  } else {
+    return [
+      `初項 = <em>${a}</em>、公差 = <em>${d}</em>、<em>${n}</em> 項まで`,
+      `末項（第${n}項） = <em>${a}</em> + (<em>${n}</em>−1) × <em>${d}</em> = <em>${last}</em>`,
+      `合計 = (初項 + 末項) × 項数 ÷ 2`,
+      `= (<em>${a}</em> + <em>${last}</em>) × <em>${n}</em> ÷ 2 = <em>${answer}</em>`,
+    ];
+  }
+}
+
+// --- Dispatcher ---
+function renderExplanation(data, diagramId, stepsId, titleId) {
+  const diagramEl = document.getElementById(diagramId);
+  const stepsEl   = document.getElementById(stepsId);
+  const titleEl   = titleId ? document.getElementById(titleId) : null;
+
+  let diagramHTML = '';
+  let steps = [];
+  let title = 'かいせつ';
+
+  if (data.type === 'area') {
+    title = 'かいせつ（面積図）';
+    diagramHTML = buildSVGDiagram(data);
+    steps = buildStepItems(data);
+  } else if (data.type === 'gcd') {
+    title = 'かいせつ（約数をしらべよう）';
+    diagramHTML = buildGCDVisual(data.a, data.b, data.g);
+    steps = buildGCDSteps(data.a, data.b, data.g);
+  } else if (data.type === 'lcm') {
+    title = 'かいせつ（倍数をしらべよう）';
+    diagramHTML = buildLCMVisual(data.a, data.b, data.l);
+    steps = buildLCMSteps(data.a, data.b, data.l);
+  } else if (data.type === 'arithmetic') {
+    title = 'かいせつ（等差数列）';
+    diagramHTML = buildSeqVisual(data.a, data.d, data.n);
+    steps = buildArithmeticSteps(data);
+  }
+
+  if (titleEl) titleEl.textContent = title;
+  if (diagramEl) diagramEl.innerHTML = diagramHTML;
+  if (stepsEl) {
+    stepsEl.innerHTML = '';
+    steps.forEach((s, i) => {
+      const row = document.createElement('div');
+      row.className = 'step-row';
+      row.innerHTML = `<div class="step-num">${i+1}</div><div class="step-text">${s}</div>`;
+      stepsEl.appendChild(row);
+    });
+  }
 }
 
 // ============================================================
 //  INIT
 // ============================================================
-renderHome();
-// ============================================================
-//  SERVICE WORKER REGISTRATION
-// ============================================================
+renderTop();
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js');

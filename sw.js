@@ -1,4 +1,4 @@
-const CACHE = 'tokushuzan-v1';
+const CACHE = 'tokushuzan-v2';
 
 const PRECACHE = ['./', './index.html', './manifest.json'];
 
