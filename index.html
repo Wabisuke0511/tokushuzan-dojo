@@ -719,9 +719,15 @@
     </div>
 
     <div class="graph-card">
-      <div class="graph-card-title">レベル別 正答率</div>
-      <canvas id="g-chart" height="160"></canvas>
-      <div id="g-chart-empty" class="no-records hidden">まだ きろくがありません</div>
+      <div class="graph-card-title">📊 モジュール別 正答率</div>
+      <canvas id="g-acc-chart" height="180"></canvas>
+      <div id="g-acc-empty" class="no-records hidden">まだ きろくがありません</div>
+    </div>
+
+    <div class="graph-card">
+      <div class="graph-card-title">📝 モジュール別 問題数</div>
+      <canvas id="g-cnt-chart" height="160"></canvas>
+      <div id="g-cnt-empty" class="no-records hidden">まだ きろくがありません</div>
     </div>
 
     <div class="graph-card">
@@ -1145,14 +1151,14 @@ function showScreen(id) {
 }
 
 function goTop() {
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  destroyCharts();
   activeModule = null;
   activeSection = null;
   showScreen('top-screen');
 }
 
 function goSection() {
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  destroyCharts();
   activeModule = null;
   if (activeSection) {
     showScreen('section-screen');
@@ -1323,7 +1329,13 @@ function saveRecord(moduleId, level, correct) {
 // ============================================================
 //  GRAPH SCREEN
 // ============================================================
-let chartInstance = null;
+let accChart = null;
+let cntChart = null;
+
+function destroyCharts() {
+  if (accChart) { accChart.destroy(); accChart = null; }
+  if (cntChart) { cntChart.destroy(); cntChart = null; }
+}
 
 function showGraph() {
   const title = activeSection ? activeSection.name + ' のきろく' : 'きろく';
@@ -1356,45 +1368,81 @@ function renderGraph() {
     ? recent.map(r => `<span class="result-dot">${r.correct ? '⭕' : '❌'}</span>`).join('')
     : '<span class="no-records">まだ きろくがありません</span>';
 
-  const basic   = recs.filter(r => r.level === 'basic');
-  const applied = recs.filter(r => r.level === 'applied');
-  const bAcc    = basic.length   ? Math.round(basic.filter(r=>r.correct).length   / basic.length   * 100) : null;
-  const aAcc    = applied.length ? Math.round(applied.filter(r=>r.correct).length / applied.length * 100) : null;
+  // per-module stats
+  const sectionMods = (activeSection ? activeSection.moduleIds : modules.map(m => m.id))
+    .map(id => modules.find(m => m.id === id))
+    .filter(m => m && m.unlocked);
 
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  const modLabels = sectionMods.map(m => m.name);
+  const COLORS = ['rgba(74,144,217,0.85)', 'rgba(39,174,96,0.85)', 'rgba(245,166,35,0.85)',
+                  'rgba(231,76,60,0.85)', 'rgba(142,68,173,0.85)', 'rgba(52,152,219,0.85)'];
+  const colors = sectionMods.map((_, i) => COLORS[i % COLORS.length]);
 
-  const emptyEl = document.getElementById('g-chart-empty');
-  if (bAcc === null && aAcc === null) {
-    emptyEl.classList.remove('hidden');
-    document.getElementById('g-chart').style.display = 'none';
-  } else {
-    emptyEl.classList.add('hidden');
-    document.getElementById('g-chart').style.display = '';
-    const ctx = document.getElementById('g-chart').getContext('2d');
-    chartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['きほん 🐢', 'おうよう ⭐'],
-        datasets: [{
-          data: [bAcc ?? 0, aAcc ?? 0],
-          backgroundColor: ['rgba(74,144,217,0.85)', 'rgba(245,166,35,0.85)'],
-          borderRadius: 10,
-          borderSkipped: false,
-        }],
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          y: {
-            min: 0, max: 100,
-            ticks: { stepSize: 20, callback: v => v + '%' },
-            grid: { color: '#eee' },
-          },
-          x: { grid: { display: false } },
-        },
-      },
-    });
+  const modAcc = sectionMods.map(m => {
+    const mr = recs.filter(r => r.moduleId === m.id);
+    return mr.length ? Math.round(mr.filter(r => r.correct).length / mr.length * 100) : null;
+  });
+  const modCounts = sectionMods.map(m => recs.filter(r => r.moduleId === m.id).length);
+
+  destroyCharts();
+
+  const accEmptyEl = document.getElementById('g-acc-empty');
+  const cntEmptyEl = document.getElementById('g-cnt-empty');
+  const accCanvas  = document.getElementById('g-acc-chart');
+  const cntCanvas  = document.getElementById('g-cnt-chart');
+
+  if (total === 0) {
+    accEmptyEl.classList.remove('hidden');
+    accCanvas.style.display = 'none';
+    cntEmptyEl.classList.remove('hidden');
+    cntCanvas.style.display = 'none';
+    return;
   }
+
+  accEmptyEl.classList.add('hidden');
+  accCanvas.style.display = '';
+  accChart = new Chart(accCanvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: modLabels,
+      datasets: [{
+        data: modAcc.map(v => v ?? 0),
+        backgroundColor: colors,
+        borderRadius: 10,
+        borderSkipped: false,
+      }],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 100, ticks: { stepSize: 20, callback: v => v + '%' }, grid: { color: '#eee' } },
+        x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } },
+      },
+    },
+  });
+
+  cntEmptyEl.classList.add('hidden');
+  cntCanvas.style.display = '';
+  cntChart = new Chart(cntCanvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: modLabels,
+      datasets: [{
+        data: modCounts,
+        backgroundColor: colors,
+        borderRadius: 10,
+        borderSkipped: false,
+      }],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1 }, grid: { color: '#eee' },
+             title: { display: true, text: '問題数', font: { size: 11 }, color: '#888' } },
+        x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } },
+      },
+    },
+  });
 }
 
 function clearRecords() {
