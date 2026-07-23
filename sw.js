@@ -1,4 +1,4 @@
-const CACHE = 'tokushuzan-v4';
+const CACHE = 'tokushuzan-v5';
 
 const PRECACHE = ['./', './index.html', './manifest.json'];
 
@@ -17,6 +17,8 @@ self.addEventListener('activate', event => {
         keys.filter(k => k !== CACHE).map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then(clients => clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' })))
   );
 });
 

@@ -2636,6 +2636,14 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js');
   });
+  // SW が更新されたらページをリロードして最新版を表示する
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'SW_UPDATED') location.reload();
+  });
+  // SW の制御が切り替わったとき（別タブで更新済みの場合など）もリロード
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    location.reload();
+  });
 }
 </script>
 </body>
