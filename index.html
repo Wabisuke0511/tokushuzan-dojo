@@ -382,7 +382,8 @@
     /* ===== LEVEL SWITCHER ===== */
     .level-switcher {
       display: flex;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
       background: var(--card);
       border-radius: var(--radius);
       padding: 6px;
@@ -390,9 +391,10 @@
     }
 
     .level-btn {
-      flex: 1;
-      padding: 10px 4px;
-      font-size: 0.88rem;
+      flex: 1 1 calc(50% - 9px);
+      min-width: 0;
+      padding: 9px 4px;
+      font-size: 0.82rem;
       font-weight: 800;
       border: none;
       border-radius: 10px;
@@ -402,9 +404,13 @@
       transition: background 0.15s, color 0.15s;
       font-family: inherit;
       -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
     }
 
+    .level-switcher.three-col .level-btn { flex: 1 1 0; }
+
     .level-btn.active { background: var(--primary); color: white; }
+    .level-btn.active.gosanke { background: #9b2c2c; }
 
     /* ===== EXPLANATION ===== */
     .explanation-card {
@@ -1060,6 +1066,7 @@
       <button class="level-btn active" id="btn-basic"   onclick="setLevel('basic')">きほん 🐢</button>
       <button class="level-btn"        id="btn-applied" onclick="setLevel('applied')">おうよう ⭐</button>
       <button class="level-btn hidden" id="btn-juken"   onclick="setLevel('juken')">中学受験 🏫</button>
+      <button class="level-btn hidden gosanke" id="btn-gosanke" onclick="setLevel('gosanke')">御三家 👑</button>
     </div>
 
     <div class="progress-wrap hidden" id="progress-wrap">
@@ -1153,7 +1160,8 @@ registerModule({
   _current: null,
 
   generate() {
-    if (this._level === 'juken') return this._genJuken();
+    if (this._level === 'juken')   return this._genJuken();
+    if (this._level === 'gosanke') return this._genGosanke();
     return this._level === 'basic' ? this._genBasic() : this._genApplied();
   },
 
@@ -1347,6 +1355,88 @@ registerModule({
     };
   },
 
+  _genGosanke() {
+    const tpls = [this._gTplRatioSum, this._gTplTransferRatio, this._gTplEqualParts, this._gTpl3Ratio];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  // A = k*B + r, A + B = S → B = (S-r)/(k+1)
+  _gTplRatioSum() {
+    let k, r, B, A, S;
+    do {
+      k = randInt(2, 4); r = randInt(1, 5) * 20;
+      B = randInt(3, 10) * 10;
+      A = k * B + r; S = A + B;
+    } while (S > 2000 || (S - r) % (k + 1) !== 0);
+    this._current = { nA: A, nB: B, nameA: '兄', nameB: '弟', unitA: '円', unitB: '円' };
+    return {
+      text: `兄と弟の所持金の合計は <span class="num">${S}</span>円。<br>兄の所持金は弟の <span class="num">${k}</span>倍より <span class="num">${r}</span>円 多い。<br>兄と弟、それぞれ 何円？`,
+      inputs: [
+        { id: 'ans-A', label: '兄の所持金', unit: '円' },
+        { id: 'ans-B', label: '弟の所持金', unit: '円' },
+      ],
+    };
+  },
+
+  // 兄がD円渡すと比 k:1 → 兄=big, 弟=small
+  _gTplTransferRatio() {
+    let k, D, small, big, S;
+    do {
+      k = randInt(2, 4); D = randInt(1, 5) * 50;
+      small = randInt(2, 8) * 50;
+      // after transfer: big-D = k*(small+D) → big = k*small + D*(k+1)
+      big = k * small + D * (k + 1);
+      S = big + small;
+    } while (S > 5000 || big <= 0 || small <= 0);
+    this._current = { nA: big, nB: small, nameA: '兄', nameB: '弟', unitA: '円', unitB: '円' };
+    return {
+      text: `兄と弟の所持金の合計は <span class="num">${S}</span>円。<br>兄が弟に <span class="num">${D}</span>円 渡すと、<br>兄：弟 ＝ <span class="num">${k}</span>：1 になる。<br>はじめ それぞれ 何円？`,
+      inputs: [
+        { id: 'ans-A', label: '兄の所持金', unit: '円' },
+        { id: 'ans-B', label: '弟の所持金', unit: '円' },
+      ],
+    };
+  },
+
+  // big/N = small/M → big = small*N/M, big+small=S
+  _gTplEqualParts() {
+    let N, M, small, big, S;
+    const pairs = [[2,3],[3,4],[3,5],[4,5],[2,5],[3,7]];
+    do {
+      [M, N] = pairs[randInt(0, pairs.length - 1)];
+      small = randInt(2, 8) * M * 10;
+      big = small * N / M;
+      S = big + small;
+    } while (!Number.isInteger(big) || S > 2000);
+    this._current = { nA: big, nB: small, nameA: '大きい数', nameB: '小さい数', unitA: '', unitB: '' };
+    return {
+      text: `2つの数の和は <span class="num">${S}</span>。<br>大きい数を <span class="num">${N}</span> 等分した数と、<br>小さい数を <span class="num">${M}</span> 等分した数が 等しい。<br>2つの数はそれぞれ いくつ？`,
+      inputs: [
+        { id: 'ans-A', label: '大きい数', unit: '' },
+        { id: 'ans-B', label: '小さい数', unit: '' },
+      ],
+    };
+  },
+
+  // A=B+d1, B=C+d2, AとCの差=AとBの差の k倍
+  _gTpl3Ratio() {
+    let d1, d2, C, B, A, S;
+    do {
+      d1 = randInt(1, 5) * 20; d2 = randInt(1, 5) * 20;
+      C  = randInt(3, 10) * 30;
+      B = C + d2; A = B + d1; S = A + B + C;
+    } while (S > 2000 || S % 3 === 0);
+    this._current = { nA: A, nB: B, nC: C, nameA: 'A', nameB: 'B', nameC: 'C', unitA: '点', unitB: '点', unitC: '点' };
+    return {
+      text: `A・B・C 3人の得点の合計は <span class="num">${S}</span>点。<br>AはBより <span class="num">${d1}</span>点、BはCより <span class="num">${d2}</span>点 高い。<br>A・B・Cそれぞれ 何点？`,
+      inputs: [
+        { id: 'ans-A', label: 'A の得点', unit: '点' },
+        { id: 'ans-B', label: 'B の得点', unit: '点' },
+        { id: 'ans-C', label: 'C の得点', unit: '点' },
+      ],
+    };
+  },
+
   explain() { return { type: 'wassan', ...this._current }; },
 });
 
@@ -1362,7 +1452,8 @@ registerModule({
   _current: null,
 
   generate() {
-    if (this._level === 'juken') return this._genJuken();
+    if (this._level === 'juken')   return this._genJuken();
+    if (this._level === 'gosanke') return this._genGosanke();
     return this._level === 'basic' ? this._genBasic() : this._genApplied();
   },
 
@@ -1533,6 +1624,92 @@ registerModule({
     return {
       correct: a === cur.nA && b === cur.nB,
       explanation: `${cur.nameA} ${cur.nA}${cur.unitA}、${cur.nameB} ${cur.nB}${cur.unitB}`,
+    };
+  },
+
+  _genGosanke() {
+    const tpls = [this._gTplProfit, this._gTplPolygon, this._gTpl3TypeRatio, this._gTplStairs];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  // 原価 + 利益率 → nA*valA*(1+rA) + nB*valB*(1+rB) = S
+  _gTplProfit() {
+    let nA, nB, valA, valB, rA, rB, N, S;
+    const rates = [[20,30],[15,25],[10,20],[20,40]];
+    do {
+      [rA, rB] = rates[randInt(0, rates.length - 1)];
+      valA = randInt(2, 6) * 100; valB = randInt(valA/100 + 2, 10) * 100;
+      nA = randInt(3, 10); nB = randInt(3, 10); N = nA + nB;
+      S = Math.round(nA * valA * (1 + rA/100) + nB * valB * (1 + rB/100));
+    } while (S % 10 !== 0 || S > 30000);
+    this._current = { N, nA, nB, valA, valB, S,
+      nameA: 'A商品', unitA: '個', nameB: 'B商品', unitB: '個', unitS: '円' };
+    return {
+      text: `原価 <span class="num">${valA}</span>円のAと原価 <span class="num">${valB}</span>円のBを<br>合わせて <span class="num">${N}</span>個 仕入れた。<br>Aに <span class="num">${rA}</span>%、Bに <span class="num">${rB}</span>% の利益を乗せて<br>全部売ると売上は <span class="num">${S}</span>円。<br>それぞれ 何個？`,
+      inputs: [
+        { id: 'ans-A', label: 'A商品', unit: '個' },
+        { id: 'ans-B', label: 'B商品', unit: '個' },
+      ],
+    };
+  },
+
+  // 正多角形の辺の数 + nA = k*nB の条件
+  _gTplPolygon() {
+    let nA, nB, N, L, k;
+    do {
+      k = randInt(2, 4);
+      nB = randInt(3, 8); nA = k * nB;
+      N = nA + nB; L = 3 * nA + 4 * nB;
+    } while (N < 10 || N > 30);
+    this._current = { N, nA, nB, valA: 3, valB: 4, S: L,
+      nameA: '正三角形', unitA: '枚', nameB: '正方形', unitB: '枚', unitS: '本' };
+    return {
+      text: `正三角形と正方形の紙が合わせて <span class="num">${N}</span>枚。<br>辺の総数は <span class="num">${L}</span>本。<br>正三角形は正方形の <span class="num">${k}</span>倍ある。<br>それぞれ 何枚？`,
+      inputs: [
+        { id: 'ans-A', label: '正三角形', unit: '枚' },
+        { id: 'ans-B', label: '正方形', unit: '枚' },
+      ],
+    };
+  },
+
+  // 3種類 + 個数の比条件 nA:nB = p:q
+  _gTpl3TypeRatio() {
+    let nA, nB, nC, N, S, vA, vB, vC, p, q;
+    const pairList = [[1,2],[1,3],[2,3],[1,1],[2,1]];
+    do {
+      [p, q] = pairList[randInt(0, pairList.length - 1)];
+      const base = randInt(2, 5);
+      nA = p * base; nB = q * base; nC = randInt(2, 8);
+      vA = randInt(2, 5) * 100; vB = randInt(vA/100+1, 8) * 100; vC = randInt(vB/100+1, 12) * 100;
+      N = nA + nB + nC; S = nA*vA + nB*vB + nC*vC;
+    } while (N > 25 || S > 50000 || S % 100 !== 0);
+    this._current = { nA, nB, nC, N, S,
+      nameA: 'A', unitA: '個', nameB: 'B', unitB: '個', nameC: 'C', unitC: '個' };
+    return {
+      text: `<span class="num">${vA}</span>円のA、<span class="num">${vB}</span>円のB、<span class="num">${vC}</span>円のCを<br>合わせて <span class="num">${N}</span>個 買うと <span class="num">${S}</span>円。<br>AとBの個数の比は <span class="num">${p}</span>：<span class="num">${q}</span>、<br>Cは <span class="num">${nC}</span>個。それぞれ 何個？`,
+      inputs: [
+        { id: 'ans-A', label: 'A の個数', unit: '個' },
+        { id: 'ans-B', label: 'B の個数', unit: '個' },
+      ],
+    };
+  },
+
+  // 階段状に積んだブロック問題（等差＋鶴亀の複合）
+  _gTplStairs() {
+    let nA, nB, N, S;
+    do {
+      nA = randInt(4, 10); nB = randInt(2, nA - 1);
+      N = nA + nB;
+      S = nA * 3 + nB * 5;
+    } while (S > 80 || N < 8);
+    this._current = { N, nA, nB, valA: 3, valB: 5, S,
+      nameA: '3段', unitA: '個', nameB: '5段', unitB: '個', unitS: '個' };
+    return {
+      text: `3段と5段に積んだブロックの塔が<br>合わせて <span class="num">${N}</span>本。<br>使ったブロックは合計 <span class="num">${S}</span>個。<br>それぞれ 何本？`,
+      inputs: [
+        { id: 'ans-A', label: '3段の塔', unit: '本' },
+        { id: 'ans-B', label: '5段の塔', unit: '本' },
+      ],
     };
   },
 
@@ -1866,9 +2043,16 @@ function startModule(id) {
   if (activeModule._level !== undefined) activeModule._level = 'basic';
   document.getElementById('btn-basic').classList.add('active');
   document.getElementById('btn-applied').classList.remove('active');
-  const jukenBtn = document.getElementById('btn-juken');
+  const jukenBtn   = document.getElementById('btn-juken');
+  const gosankeBtn = document.getElementById('btn-gosanke');
   jukenBtn.classList.remove('active');
-  jukenBtn.classList.toggle('hidden', typeof activeModule._genJuken !== 'function');
+  gosankeBtn.classList.remove('active');
+  const hasJuken   = typeof activeModule._genJuken   === 'function';
+  const hasGosanke = typeof activeModule._genGosanke === 'function';
+  jukenBtn.classList.toggle('hidden', !hasJuken);
+  gosankeBtn.classList.toggle('hidden', !hasGosanke);
+  const sw = document.querySelector('.level-switcher');
+  sw.classList.toggle('three-col', hasJuken && !hasGosanke);
   initSession();
   showScreen('quiz-screen');
   loadQuestion();
@@ -1880,6 +2064,7 @@ function setLevel(level) {
   document.getElementById('btn-basic').classList.toggle('active', level === 'basic');
   document.getElementById('btn-applied').classList.toggle('active', level === 'applied');
   document.getElementById('btn-juken').classList.toggle('active', level === 'juken');
+  document.getElementById('btn-gosanke').classList.toggle('active', level === 'gosanke');
   initSession();
   loadQuestion();
 }
