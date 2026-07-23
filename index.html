@@ -281,21 +281,22 @@
     .answer-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       margin-bottom: 14px;
     }
 
     .answer-row:last-of-type { margin-bottom: 0; }
 
     .answer-label {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
-      width: 90px;
+      white-space: nowrap;
       flex-shrink: 0;
     }
 
     .answer-input {
       flex: 1;
+      min-width: 0;
       font-size: 1.4rem;
       font-weight: 700;
       text-align: center;
