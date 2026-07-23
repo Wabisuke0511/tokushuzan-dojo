@@ -391,8 +391,8 @@
 
     .level-btn {
       flex: 1;
-      padding: 10px 6px;
-      font-size: 1rem;
+      padding: 10px 4px;
+      font-size: 0.88rem;
       font-weight: 800;
       border: none;
       border-radius: 10px;
@@ -1059,6 +1059,7 @@
     <div class="level-switcher">
       <button class="level-btn active" id="btn-basic"   onclick="setLevel('basic')">きほん 🐢</button>
       <button class="level-btn"        id="btn-applied" onclick="setLevel('applied')">おうよう ⭐</button>
+      <button class="level-btn hidden" id="btn-juken"   onclick="setLevel('juken')">中学受験 🏫</button>
     </div>
 
     <div class="progress-wrap hidden" id="progress-wrap">
@@ -1151,7 +1152,10 @@ registerModule({
   _level: 'basic',
   _current: null,
 
-  generate() { return this._level === 'basic' ? this._genBasic() : this._genApplied(); },
+  generate() {
+    if (this._level === 'juken') return this._genJuken();
+    return this._level === 'basic' ? this._genBasic() : this._genApplied();
+  },
 
   _makeValid(sumMin, sumMax, diffMin, diffMax) {
     let sum, diff;
@@ -1229,13 +1233,117 @@ registerModule({
     };
   },
 
+  _genJuken() {
+    const tpls = [this._jTpl3Person, this._jTplTransfer, this._jTplRatio, this._jTplFuture];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _jTpl3Person() {
+    // A=B+d1, B=C+d2, A+B+C=S → C=(S-d1-2*d2)/3
+    let d1, d2, S, C;
+    do {
+      d1 = randInt(1,5)*10; d2 = randInt(1,5)*10;
+      S  = randInt(6,15)*30;
+      C  = (S - d1 - 2*d2) / 3;
+    } while (!Number.isInteger(C) || C <= 0);
+    const B = C + d2, A = B + d1;
+    this._current = { nA: A, nB: B, nC: C, nameA: 'A', nameB: 'B', nameC: 'C', unitA: '点', unitB: '点', unitC: '点' };
+    return {
+      text: `A・B・C 3人のテストの合計は <span class="num">${S}</span>点。<br>AはBより <span class="num">${d1}</span>点 高く、<br>BはCより <span class="num">${d2}</span>点 高い。<br>それぞれ 何点？`,
+      inputs: [
+        { id: 'ans-A', label: 'A の点数', unit: '点' },
+        { id: 'ans-B', label: 'B の点数', unit: '点' },
+        { id: 'ans-C', label: 'C の点数', unit: '点' },
+      ],
+    };
+  },
+
+  _jTplTransfer() {
+    // AがBにx枚渡すとBはAのk倍 → big=A, small=B, transfer=x, ratio=k
+    let big, small, x, k;
+    do {
+      big   = randInt(30, 80);
+      small = randInt(10, big - 10);
+      x     = randInt(2, Math.floor((big - small) / 3));
+      k     = 2;
+    } while ((small + x) !== k * (big - x));
+    // Ensure k=2: small+x = 2(big-x) → small = 2*big - 3x
+    // Regenerate properly
+    x   = randInt(4, 20);
+    big = randInt(3*x + 10, 3*x + 40);
+    small = 2*big - 3*x;
+    if (small <= 0 || small >= big) { return this._jTplRatio.call(this); }
+    const total = big + small;
+    this._current = { nA: big, nB: small, nameA: 'A', nameB: 'B', unitA: '枚', unitB: '枚', big, small, sum: total, diff: big - small };
+    return {
+      text: `AとBはカードを合わせて <span class="num">${total}</span>枚 持っている。<br>AがBに <span class="num">${x}</span>枚 わたすと<br>BはAの2倍になる。<br>はじめ それぞれ 何枚？`,
+      inputs: [
+        { id: 'ans-A', label: 'A の枚数', unit: '枚' },
+        { id: 'ans-B', label: 'B の枚数', unit: '枚' },
+      ],
+    };
+  },
+
+  _jTplRatio() {
+    // A = k*B + r, A+B = S
+    const k = randInt(2, 4);
+    const r = randInt(1, 6) * 10;
+    const B = randInt(10, 30);
+    const A = k * B + r;
+    const S = A + B;
+    this._current = { nA: A, nB: B, nameA: '兄', nameB: '弟', unitA: '円', unitB: '円', big: A, small: B, sum: S, diff: A - B };
+    return {
+      text: `兄と弟の所持金の合計は <span class="num">${S}</span>円。<br>兄は弟の <span class="num">${k}</span>倍より <span class="num">${r}</span>円 多い。<br>それぞれ 何円？`,
+      inputs: [
+        { id: 'ans-A', label: '兄の所持金', unit: '円' },
+        { id: 'ans-B', label: '弟の所持金', unit: '円' },
+      ],
+    };
+  },
+
+  _jTplFuture() {
+    // 現在の和・差から求め、y年後の年齢も問う
+    let sum, diff, big, small, y;
+    do {
+      diff  = randInt(2, 6) * 4;
+      small = randInt(8, 20);
+      big   = small + diff;
+      sum   = big + small;
+      y     = randInt(3, 10);
+    } while (sum % 2 !== 0);
+    const futureA = big + y, futureB = small + y;
+    this._current = { nA: big, nB: small, nameA: '姉', nameB: '妹', unitA: '歳', unitB: '歳', big, small, sum, diff, y, futureA, futureB };
+    return {
+      text: `姉と妹の年齢の和は <span class="num">${sum}</span>歳、差は <span class="num">${diff}</span>歳。<br><span class="num">${y}</span>年後、<br>姉は何歳で、妹は何歳？`,
+      inputs: [
+        { id: 'ans-A', label: `${y}年後の姉`, unit: '歳' },
+        { id: 'ans-B', label: `${y}年後の妹`, unit: '歳' },
+      ],
+    };
+  },
+
   checkAnswer() {
     const a = parseInt(document.getElementById('ans-A').value, 10);
     const b = parseInt(document.getElementById('ans-B').value, 10);
-    const { big, small, nameA, unitA, nameB, unitB } = this._current;
+    const cur = this._current;
+    if (cur.nC !== undefined) {
+      const c = parseInt(document.getElementById('ans-C')?.value, 10);
+      return {
+        correct: a === cur.nA && b === cur.nB && c === cur.nC,
+        explanation: `${cur.nameA} ${cur.nA}${cur.unitA}、${cur.nameB} ${cur.nB}${cur.unitB}、${cur.nameC} ${cur.nC}${cur.unitC}`,
+      };
+    }
+    if (cur.futureA !== undefined) {
+      return {
+        correct: a === cur.futureA && b === cur.futureB,
+        explanation: `${cur.nameA} ${cur.futureA}${cur.unitA}、${cur.nameB} ${cur.futureB}${cur.unitB}`,
+      };
+    }
+    const ansA = cur.nA !== undefined ? cur.nA : cur.big;
+    const ansB = cur.nB !== undefined ? cur.nB : cur.small;
     return {
-      correct: a === big && b === small,
-      explanation: `${nameA} ${big}${unitA}、${nameB} ${small}${unitB}`,
+      correct: a === ansA && b === ansB,
+      explanation: `${cur.nameA} ${ansA}${cur.unitA}、${cur.nameB} ${ansB}${cur.unitB}`,
     };
   },
 
@@ -1253,7 +1361,10 @@ registerModule({
   _level: 'basic',
   _current: null,
 
-  generate() { return this._level === 'basic' ? this._genBasic() : this._genApplied(); },
+  generate() {
+    if (this._level === 'juken') return this._genJuken();
+    return this._level === 'basic' ? this._genBasic() : this._genApplied();
+  },
 
   _genBasic() {
     const N = randInt(6, 18), nA = randInt(1, N - 1), nB = N - nA;
@@ -1320,13 +1431,108 @@ registerModule({
     };
   },
 
+  _genJuken() {
+    const tpls = [this._jTplSwap, this._jTpl3Type, this._jTplOverlap, this._jTplChanged];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _jTplSwap() {
+    // 個数を入れ替えると代金がD円変わる
+    const valA = randInt(3,8)*10, valB = randInt(valA/10+2, 12)*10;
+    const nA = randInt(3,10), nB = randInt(3,10);
+    const N = nA + nB;
+    const P = nA*valA + nB*valB;
+    const Q = nB*valA + nA*valB;
+    const diff = Math.abs(P - Q);
+    this._current = { N, nA, nB, valA, valB, S: P,
+      nameA: 'A商品', unitA: '個', nameB: 'B商品', unitB: '個', unitS: '円' };
+    return {
+      text: `<span class="num">${valA}</span>円のAと <span class="num">${valB}</span>円のBを<br>合わせて <span class="num">${N}</span>個 買うと <span class="num">${P}</span>円。<br>AとBの個数を入れ替えると <span class="num">${Q}</span>円になる。<br>それぞれ 何個？`,
+      inputs: [
+        { id: 'ans-A', label: 'A商品', unit: '個' },
+        { id: 'ans-B', label: 'B商品', unit: '個' },
+      ],
+    };
+  },
+
+  _jTpl3Type() {
+    // 3種類（足の数）：自転車2輪、三輪車3輪、自動車4輪
+    let nA, nB, nC, N, L;
+    do {
+      nA = randInt(2, 8); nB = randInt(2, 8); nC = randInt(2, 8);
+      N  = nA + nB + nC;
+      L  = 2*nA + 3*nB + 4*nC;
+    } while (N < 8 || N > 20 || L < 15 || L > 60);
+    // Extra clue: nA + nC = N - nB （自転車＋自動車の合計）
+    const nAC = nA + nC;
+    this._current = { nA, nB, nC, N, L, nAC,
+      nameA: '自転車', unitA: '台', nameB: '三輪車', unitB: '台', nameC: '自動車', unitC: '台' };
+    return {
+      text: `自転車(2輪)・三輪車(3輪)・自動車(4輪)が<br>合わせて <span class="num">${N}</span>台、車輪は <span class="num">${L}</span>本。<br>三輪車は <span class="num">${nB}</span>台のとき、<br>自転車と自動車は それぞれ 何台？`,
+      inputs: [
+        { id: 'ans-A', label: '自転車', unit: '台' },
+        { id: 'ans-B', label: '自動車', unit: '台' },
+      ],
+    };
+  },
+
+  _jTplOverlap() {
+    // テスト合否：100点→合格、60点→不合格 の問題
+    const total = randInt(20, 40);
+    const pass  = randInt(Math.ceil(total/2), total - 3);
+    const fail  = total - pass;
+    const S     = 100*pass + 60*fail;
+    this._current = { N: total, nA: pass, nB: fail, valA: 100, valB: 60, S,
+      nameA: '合格者', unitA: '人', nameB: '不合格者', unitB: '人', unitS: '点' };
+    return {
+      text: `<span class="num">${total}</span>人がテストを受けた。<br>合格は100点、不合格は60点として<br>合計点は <span class="num">${S}</span>点。<br>合格者と不合格者は それぞれ 何人？`,
+      inputs: [
+        { id: 'ans-A', label: '合格者', unit: '人' },
+        { id: 'ans-B', label: '不合格者', unit: '人' },
+      ],
+    };
+  },
+
+  _jTplChanged() {
+    // 追加・削除後の条件: nA羽増やし、nB匹減らすと足がD本増えた
+    const N = randInt(8, 20), nA = randInt(2, N-2), nB = N - nA;
+    const valA = 2, valB = 4, S = nA*valA + nB*valB;
+    const addA = randInt(1, 4), removeB = randInt(1, Math.min(4, nB-1));
+    const deltaLegs = addA*valA - removeB*valB;
+    const deltaWord = deltaLegs >= 0
+      ? `<span class="num">${Math.abs(deltaLegs)}</span>本 増える`
+      : `<span class="num">${Math.abs(deltaLegs)}</span>本 減る`;
+    this._current = { N, nA, nB, valA, valB, S,
+      nameA: 'つる', unitA: 'わ', nameB: 'かめ', unitB: 'ひき', unitS: '本' };
+    return {
+      text: `つるとかめが合わせて <span class="num">${N}</span>匹、<br>足は <span class="num">${S}</span>本。<br>つるを <span class="num">${addA}</span>羽 増やし、かめを <span class="num">${removeB}</span>匹 減らすと<br>足は ${deltaWord}。<br>はじめ それぞれ 何匹？`,
+      inputs: [
+        { id: 'ans-A', label: 'つるの数', unit: 'わ' },
+        { id: 'ans-B', label: 'かめの数', unit: 'ひき' },
+      ],
+    };
+  },
+
   checkAnswer() {
     const a = parseInt(document.getElementById('ans-A').value, 10);
     const b = parseInt(document.getElementById('ans-B').value, 10);
-    const { nA, nB, nameA, unitA, nameB, unitB } = this._current;
+    const cur = this._current;
+    if (cur.nC !== undefined && document.getElementById('ans-C')) {
+      const c = parseInt(document.getElementById('ans-C').value, 10);
+      return {
+        correct: a === cur.nA && b === cur.nB && c === cur.nC,
+        explanation: `${cur.nameA} ${cur.nA}${cur.unitA}、${cur.nameB} ${cur.nB}${cur.unitB}、${cur.nameC} ${cur.nC}${cur.unitC}`,
+      };
+    }
+    if (cur.nAC !== undefined) {
+      return {
+        correct: a === cur.nA && b === cur.nC,
+        explanation: `自転車 ${cur.nA}台、三輪車 ${cur.nB}台、自動車 ${cur.nC}台`,
+      };
+    }
     return {
-      correct: a === nA && b === nB,
-      explanation: `${nameA} ${nA}${unitA}、${nameB} ${nB}${unitB}`,
+      correct: a === cur.nA && b === cur.nB,
+      explanation: `${cur.nameA} ${cur.nA}${cur.unitA}、${cur.nameB} ${cur.nB}${cur.unitB}`,
     };
   },
 
@@ -1660,6 +1866,9 @@ function startModule(id) {
   if (activeModule._level !== undefined) activeModule._level = 'basic';
   document.getElementById('btn-basic').classList.add('active');
   document.getElementById('btn-applied').classList.remove('active');
+  const jukenBtn = document.getElementById('btn-juken');
+  jukenBtn.classList.remove('active');
+  jukenBtn.classList.toggle('hidden', typeof activeModule._genJuken !== 'function');
   initSession();
   showScreen('quiz-screen');
   loadQuestion();
@@ -1670,6 +1879,7 @@ function setLevel(level) {
   activeModule._level = level;
   document.getElementById('btn-basic').classList.toggle('active', level === 'basic');
   document.getElementById('btn-applied').classList.toggle('active', level === 'applied');
+  document.getElementById('btn-juken').classList.toggle('active', level === 'juken');
   initSession();
   loadQuestion();
 }
@@ -2103,6 +2313,13 @@ async function clearRecords() {
 //  REFERENCE SCREEN
 // ============================================================
 const REF_CONTENT = {
+  wassan: {
+    title: '和差算',
+    concept: `2つの数の <b>和（たした数）</b> と <b>差（ひいた数）</b> がわかっているとき、<br>それぞれの数を求める計算です。`,
+    method: `<b>大きい数</b> ＝ (和 ＋ 差) ÷ 2<br><b>小さい数</b> ＝ (和 − 差) ÷ 2`,
+    exQ: `2つの数の 和は <b>20</b>、差は <b>6</b>。<br>それぞれの数は？`,
+    example: { type: 'wassan', sum: 20, diff: 6, big: 13, small: 7, nameA: '大きい数', nameB: '小さい数', unitA: '', unitB: '' },
+  },
   tsurukame: {
     title: '鶴亀算',
     concept: `<b>つるとかめ</b>のように、<b>2しゅるい</b>のものが まざっているとき、<br>それぞれ 何びきか もとめる計算です。<br>足の数などが ヒントになります。`,
