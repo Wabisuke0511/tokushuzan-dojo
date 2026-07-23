@@ -305,9 +305,17 @@
       background: #f8fafc;
       color: var(--text);
       -webkit-appearance: none;
+      -moz-appearance: textfield;
+      appearance: none;
       outline: none;
       transition: border-color 0.15s;
       font-family: inherit;
+    }
+
+    .answer-input::-webkit-outer-spin-button,
+    .answer-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     .answer-input:focus { border-color: var(--primary); }
