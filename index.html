@@ -1141,6 +1141,108 @@ const modules = [];
 function registerModule(mod) { modules.push(mod); }
 
 // ============================================================
+//  和差算 MODULE
+// ============================================================
+registerModule({
+  id: 'wassan',
+  name: '和差算',
+  icon: '⚖️',
+  unlocked: true,
+  _level: 'basic',
+  _current: null,
+
+  generate() { return this._level === 'basic' ? this._genBasic() : this._genApplied(); },
+
+  _makeValid(sumMin, sumMax, diffMin, diffMax) {
+    let sum, diff;
+    do {
+      sum  = randInt(sumMin, sumMax);
+      diff = randInt(diffMin, diffMax);
+    } while ((sum + diff) % 2 !== 0 || diff >= sum);
+    const big   = (sum + diff) / 2;
+    const small = (sum - diff) / 2;
+    return { sum, diff, big, small };
+  },
+
+  _genBasic() {
+    const { sum, diff, big, small } = this._makeValid(10, 30, 2, 12);
+    this._current = { sum, diff, big, small, nameA: '大きい数', nameB: '小さい数', unitA: '', unitB: '' };
+    return {
+      text: `2つの数の 和は <span class="num">${sum}</span>、<br>差は <span class="num">${diff}</span> です。<br>それぞれの数は？`,
+      inputs: [
+        { id: 'ans-A', label: '大きい数', unit: '' },
+        { id: 'ans-B', label: '小さい数', unit: '' },
+      ],
+    };
+  },
+
+  _genApplied() {
+    const tpls = [this._tplAllowance, this._tplRibbon, this._tplAge, this._tplCards];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _tplAllowance() {
+    const { sum, diff, big, small } = this._makeValid(400, 1200, 50, 400);
+    this._current = { sum, diff, big, small, nameA: '兄', nameB: '弟', unitA: '円', unitB: '円' };
+    return {
+      text: `兄と弟のおこづかいを あわせると <span class="num">${sum}</span>円。<br>兄の方が <span class="num">${diff}</span>円 多い。<br>それぞれ 何円？`,
+      inputs: [
+        { id: 'ans-A', label: '兄のおこづかい', unit: '円' },
+        { id: 'ans-B', label: '弟のおこづかい', unit: '円' },
+      ],
+    };
+  },
+
+  _tplRibbon() {
+    const { sum, diff, big, small } = this._makeValid(20, 80, 4, 20);
+    this._current = { sum, diff, big, small, nameA: '赤', nameB: '青', unitA: 'cm', unitB: 'cm' };
+    return {
+      text: `赤と青のリボンをつなぐと <span class="num">${sum}</span>cm。<br>赤の方が <span class="num">${diff}</span>cm 長い。<br>それぞれ 何cm？`,
+      inputs: [
+        { id: 'ans-A', label: '赤のリボン', unit: 'cm' },
+        { id: 'ans-B', label: '青のリボン', unit: 'cm' },
+      ],
+    };
+  },
+
+  _tplAge() {
+    const { sum, diff, big, small } = this._makeValid(20, 60, 2, 16);
+    this._current = { sum, diff, big, small, nameA: '父', nameB: '子', unitA: '歳', unitB: '歳' };
+    return {
+      text: `父と子の年れいの和は <span class="num">${sum}</span>歳。<br>父の方が <span class="num">${diff}</span>歳 年上。<br>それぞれ 何歳？`,
+      inputs: [
+        { id: 'ans-A', label: '父の年れい', unit: '歳' },
+        { id: 'ans-B', label: '子の年れい', unit: '歳' },
+      ],
+    };
+  },
+
+  _tplCards() {
+    const { sum, diff, big, small } = this._makeValid(20, 60, 2, 20);
+    this._current = { sum, diff, big, small, nameA: 'A', nameB: 'B', unitA: 'まい', unitB: 'まい' };
+    return {
+      text: `AとBのカードをあわせると <span class="num">${sum}</span>まい。<br>Aの方が <span class="num">${diff}</span>まい 多い。<br>それぞれ 何まい？`,
+      inputs: [
+        { id: 'ans-A', label: 'Aのカード', unit: 'まい' },
+        { id: 'ans-B', label: 'Bのカード', unit: 'まい' },
+      ],
+    };
+  },
+
+  checkAnswer() {
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    const b = parseInt(document.getElementById('ans-B').value, 10);
+    const { big, small, nameA, unitA, nameB, unitB } = this._current;
+    return {
+      correct: a === big && b === small,
+      explanation: `${nameA} ${big}${unitA}、${nameB} ${small}${unitB}`,
+    };
+  },
+
+  explain() { return { type: 'wassan', ...this._current }; },
+});
+
+// ============================================================
 //  鶴亀算 MODULE
 // ============================================================
 registerModule({
@@ -1445,8 +1547,8 @@ const sections = [
     name: '特殊算',
     icon: '🐢',
     color: '#4a90d9',
-    desc: '鶴亀算・旅人算など',
-    moduleIds: ['tsurukame', 'tabibito', 'ueki', 'ryusui', 'sasume', 'kafusoku'],
+    desc: '和差算・鶴亀算・旅人算など',
+    moduleIds: ['wassan', 'tsurukame', 'tabibito', 'ueki', 'ryusui', 'sasume', 'kafusoku'],
   },
 ];
 
@@ -2206,6 +2308,62 @@ function buildArithmeticSteps({ a, d, n, answer, subtype, last }) {
 }
 
 // --- Dispatcher ---
+function buildWassanVisual({ sum, diff, big, small, nameA, nameB, unitA, unitB }) {
+  const W = 280, PAD_L = 52, PAD_R = 20, PAD_T = 16, PAD_B = 16;
+  const ROW_H = 34, GAP = 18;
+  const vbW = PAD_L + W + PAD_R;
+  const vbH = PAD_T + ROW_H + GAP + ROW_H + PAD_B + 40;
+  const COL_A = '#378ADD', COL_B = '#5a9e28', COL_DIFF = '#E24B4A';
+  const x0 = PAD_L, y0 = PAD_T;
+  const bigW  = W;
+  const smallW = Math.round(W * small / big);
+  const diffW  = bigW - smallW;
+  const yA = y0, yB = y0 + ROW_H + GAP;
+
+  let svg = `<svg viewBox="0 0 ${vbW} ${vbH}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#f8fafc;border-radius:10px;">`;
+
+  // Row A (big)
+  svg += `<rect x="${x0}" y="${yA}" width="${bigW}" height="${ROW_H}" fill="${COL_A}" opacity="0.8" rx="4"/>`;
+  svg += `<text x="${x0 + smallW/2}" y="${yA + ROW_H/2}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="bold" fill="white">${nameA}（${big}${unitA}）</text>`;
+
+  // Row B (small) — same left edge
+  svg += `<rect x="${x0}" y="${yB}" width="${smallW}" height="${ROW_H}" fill="${COL_B}" opacity="0.8" rx="4"/>`;
+  svg += `<text x="${x0 + smallW/2}" y="${yB + ROW_H/2}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="bold" fill="white">${nameB}（${small}${unitB}）</text>`;
+
+  // Diff bracket on Row A
+  svg += `<rect x="${x0 + smallW}" y="${yA}" width="${diffW}" height="${ROW_H}" fill="${COL_DIFF}" opacity="0.18" rx="0"/>`;
+  svg += `<rect x="${x0 + smallW}" y="${yA}" width="${diffW}" height="${ROW_H}" fill="none" stroke="${COL_DIFF}" stroke-width="2" stroke-dasharray="5 3" rx="0"/>`;
+  if (diffW > 18) svg += `<text x="${x0 + smallW + diffW/2}" y="${yA + ROW_H/2}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="bold" fill="${COL_DIFF}">差${diff}${unitA}</text>`;
+
+  // Sum brace under Row A
+  const braceY = yA + ROW_H + 6;
+  svg += `<line x1="${x0}" y1="${braceY}" x2="${x0+bigW}" y2="${braceY}" stroke="#888" stroke-width="1.2"/>`;
+  svg += `<line x1="${x0}" y1="${braceY}" x2="${x0}" y2="${braceY+5}" stroke="#888" stroke-width="1.2"/>`;
+  svg += `<line x1="${x0+bigW}" y1="${braceY}" x2="${x0+bigW}" y2="${braceY+5}" stroke="#888" stroke-width="1.2"/>`;
+  svg += `<text x="${x0 + bigW/2}" y="${braceY + 14}" text-anchor="middle" font-size="10" fill="#555">和 = ${sum}${unitA}</text>`;
+
+  // Left labels
+  svg += `<text x="${x0-4}" y="${yA + ROW_H/2}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="${COL_A}" font-weight="bold">${nameA}</text>`;
+  svg += `<text x="${x0-4}" y="${yB + ROW_H/2}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="${COL_B}" font-weight="bold">${nameB}</text>`;
+
+  // Align tick on right of B
+  svg += `<line x1="${x0+smallW}" y1="${yB}" x2="${x0+smallW}" y2="${yB+ROW_H}" stroke="#ccc" stroke-width="1" stroke-dasharray="3 2"/>`;
+
+  svg += `</svg>`;
+  return svg;
+}
+
+function buildWassanSteps({ sum, diff, big, small, nameA, nameB, unitA }) {
+  const sumPlusDiff = sum + diff;
+  const sumMinusDiff = sum - diff;
+  return [
+    `和と差をたす：<em>${sum}</em> + <em>${diff}</em> = <em>${sumPlusDiff}</em>`,
+    `大きい数 = <em>${sumPlusDiff}</em> ÷ 2 = <span class="green">${big}${unitA}</span>`,
+    `和と差をひく：<em>${sum}</em> − <em>${diff}</em> = <em>${sumMinusDiff}</em>`,
+    `小さい数 = <em>${sumMinusDiff}</em> ÷ 2 = <span class="green">${small}${unitA}</span>`,
+  ];
+}
+
 function renderExplanation(data, diagramId, stepsId, titleId) {
   const diagramEl = document.getElementById(diagramId);
   const stepsEl   = document.getElementById(stepsId);
@@ -2231,6 +2389,10 @@ function renderExplanation(data, diagramId, stepsId, titleId) {
     title = 'かいせつ（等差数列）';
     diagramHTML = buildSeqVisual(data.a, data.d, data.n);
     steps = buildArithmeticSteps(data);
+  } else if (data.type === 'wassan') {
+    title = 'かいせつ（線分図）';
+    diagramHTML = buildWassanVisual(data);
+    steps = buildWassanSteps(data);
   }
 
   if (titleEl) titleEl.textContent = title;
