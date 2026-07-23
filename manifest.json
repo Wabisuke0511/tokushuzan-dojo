@@ -1,6 +1,6 @@
 {
-  "name": "特殊算道場",
-  "short_name": "特殊算道場",
+  "name": "算数道場",
+  "short_name": "算数道場",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
