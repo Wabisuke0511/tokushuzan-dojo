@@ -11,6 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="算数道場">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -680,6 +681,249 @@
       color: var(--muted);
       padding-bottom: 14px;
     }
+
+    /* ===== NICKNAME ===== */
+    .nickname-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 24px 0;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .nickname-name {
+      font-weight: 800;
+      color: white;
+    }
+
+    .nickname-change-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .nickname-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 24px;
+    }
+
+    .nickname-overlay.hidden { display: none; }
+
+    .nickname-modal {
+      background: white;
+      border-radius: 20px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+
+    .nickname-modal h3 {
+      font-size: 1.3rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .nickname-modal p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .nickname-input {
+      width: 100%;
+      font-size: 1.3rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 14px;
+      border: 2px solid #dde3ea;
+      border-radius: 12px;
+      outline: none;
+      font-family: inherit;
+      margin-bottom: 16px;
+    }
+
+    .nickname-input:focus { border-color: var(--primary); }
+
+    .nickname-ok-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* ===== TOP ACTIONS ===== */
+    .top-actions {
+      padding: 0 16px 32px;
+    }
+
+    /* ===== QUESTION COUNT SELECTOR ===== */
+    .qcount-section {
+      padding: 0 16px 4px;
+    }
+
+    .qcount-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .qcount-bar {
+      display: flex;
+      gap: 8px;
+    }
+
+    .qcount-btn {
+      flex: 1;
+      padding: 10px 6px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      border: 2px solid #dde3ea;
+      border-radius: 10px;
+      background: white;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .qcount-btn.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+    }
+
+    .qcount-btn:active { opacity: 0.8; }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-wrap {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .progress-track {
+      background: #dde3ea;
+      border-radius: 10px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+
+    /* ===== SESSION RESULT CARD ===== */
+    .session-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 32px 20px 28px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .session-icon { font-size: 3.5rem; margin-bottom: 12px; }
+
+    .session-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
+    .session-title.great  { color: var(--success); }
+    .session-title.ok     { color: var(--accent); }
+    .session-title.retry  { color: var(--error); }
+
+    .session-detail { font-size: 1rem; color: var(--muted); font-weight: 600; margin-bottom: 20px; line-height: 1.7; }
+
+    .session-btns { display: flex; flex-direction: column; gap: 10px; }
+
+    .btn-retry {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-back-sec {
+      background: #eef2f7;
+      color: var(--text);
+      border: none;
+      border-radius: var(--radius);
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== HISTORY TABLE ===== */
+    .hist-wrap { overflow-x: auto; }
+
+    .hist-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .hist-table th {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 700;
+      padding: 8px 6px 6px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .hist-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid #f5f5f5;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .hist-table tr:last-child td { border-bottom: none; }
+    .hist-high { color: var(--success); font-weight: 800; }
+    .hist-mid  { color: var(--accent);  font-weight: 800; }
+    .hist-low  { color: var(--error);   font-weight: 800; }
   </style>
 </head>
 <body>
@@ -689,8 +933,25 @@
   <div class="top-header">
     <h1>算数道場</h1>
     <p>算数をトレーニング！</p>
+    <div class="nickname-bar">
+      <span>あだな：<span class="nickname-name" id="nickname-display">（未設定）</span></span>
+      <button class="nickname-change-btn" onclick="showNicknameModal(true)">変える</button>
+    </div>
   </div>
   <div class="categories-list" id="categories-list"></div>
+  <div class="top-actions">
+    <button class="home-action-btn btn-graph" onclick="showGraph()">📊 きろく（グラフ）を見る</button>
+  </div>
+</div>
+
+<!-- ===== NICKNAME MODAL ===== -->
+<div class="nickname-overlay hidden" id="nickname-overlay">
+  <div class="nickname-modal">
+    <h3>👤 あだなを入れてね</h3>
+    <p>どの端末からでも記録を共有するために使います</p>
+    <input class="nickname-input" type="text" id="nickname-input" maxlength="20" placeholder="例：しゅんすけ">
+    <button class="nickname-ok-btn" onclick="confirmNickname()">OK</button>
+  </div>
 </div>
 
 <!-- ===== SECTION ===== -->
@@ -700,8 +961,9 @@
     <h2 id="section-title"></h2>
   </div>
   <div class="modules-grid" id="modules-grid"></div>
-  <div class="home-actions">
-    <button class="home-action-btn btn-graph" onclick="showGraph()">📊 きろく（グラフ）を見る</button>
+  <div class="qcount-section">
+    <div class="qcount-label">1回に解く問題数</div>
+    <div class="qcount-bar" id="qcount-bar"></div>
   </div>
 </div>
 
@@ -731,8 +993,23 @@
     </div>
 
     <div class="graph-card">
-      <div class="graph-card-title">さいきんの 問題（あたらしい順）</div>
+      <div class="graph-card-title">📈 せいせきの推移</div>
+      <canvas id="g-line-chart" height="180"></canvas>
+      <div id="g-line-empty" class="no-records hidden">まだ きろくがありません</div>
+    </div>
+
+    <div class="graph-card">
+      <div class="graph-card-title">さいきんの結果（あたらしい順）</div>
       <div class="dots-row" id="g-dots"></div>
+    </div>
+
+    <div class="graph-card" id="g-history-card">
+      <div class="graph-card-title">📋 履歴一覧</div>
+      <div class="hist-wrap"><table class="hist-table" id="g-history-table">
+        <thead><tr><th>日時</th><th>モジュール</th><th>せいせき</th><th>正答率</th></tr></thead>
+        <tbody id="g-history-body"></tbody>
+      </table></div>
+      <div id="g-history-empty" class="no-records hidden">まだ きろくがありません</div>
     </div>
 
     <button class="reset-btn" onclick="clearRecords()">きろくを リセットする</button>
@@ -775,6 +1052,14 @@
       <button class="level-btn"        id="btn-applied" onclick="setLevel('applied')">おうよう ⭐</button>
     </div>
 
+    <div class="progress-wrap hidden" id="progress-wrap">
+      <div class="progress-info">
+        <span id="q-num">1問め / 5問</span>
+        <span id="q-correct">0問正解</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+
     <div class="question-card">
       <div class="question-label">もんだい</div>
       <div class="question-text" id="question-text"></div>
@@ -797,10 +1082,27 @@
     </div>
 
     <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">つぎのもんだい →</button>
+
+    <div class="session-card hidden" id="session-card">
+      <div class="session-icon" id="session-icon">🎉</div>
+      <div class="session-title" id="session-title"></div>
+      <div class="session-detail" id="session-detail"></div>
+      <div class="session-btns">
+        <button class="btn-retry" onclick="restartSession()" id="btn-retry">もういちど</button>
+        <button class="btn-back-sec" onclick="goSection()">セクションにもどる</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
+// ============================================================
+//  SESSION STATE
+// ============================================================
+let qCount = 5;
+let sessionAnswered = 0;
+let sessionCorrect  = 0;
+
 // ============================================================
 //  UTILS
 // ============================================================
@@ -1193,13 +1495,26 @@ function renderTop() {
   });
 }
 
+function renderQCountBar() {
+  const bar = document.getElementById('qcount-bar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  [1, 3, 5, 10].forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'qcount-btn' + (n === qCount ? ' active' : '');
+    btn.textContent = n + '問';
+    btn.onclick = () => { qCount = n; renderQCountBar(); };
+    bar.appendChild(btn);
+  });
+}
+
 function renderSection() {
   if (!activeSection) return;
 
-  // header color
   const header = document.getElementById('section-header');
   header.style.background = activeSection.color;
   document.getElementById('section-title').textContent = activeSection.name;
+  renderQCountBar();
 
   const sectionModules = activeSection.moduleIds.map(id => modules.find(m => m.id === id)).filter(Boolean);
   const grid = document.getElementById('modules-grid');
@@ -1234,6 +1549,7 @@ function startModule(id) {
   if (activeModule._level !== undefined) activeModule._level = 'basic';
   document.getElementById('btn-basic').classList.add('active');
   document.getElementById('btn-applied').classList.remove('active');
+  initSession();
   showScreen('quiz-screen');
   loadQuestion();
 }
@@ -1243,13 +1559,31 @@ function setLevel(level) {
   activeModule._level = level;
   document.getElementById('btn-basic').classList.toggle('active', level === 'basic');
   document.getElementById('btn-applied').classList.toggle('active', level === 'applied');
+  initSession();
   loadQuestion();
+}
+
+function initSession() {
+  sessionAnswered = 0;
+  sessionCorrect  = 0;
+  document.getElementById('session-card').classList.add('hidden');
+  document.getElementById('progress-wrap').classList.remove('hidden');
+  document.getElementById('btn-retry').textContent = 'もういちど（' + qCount + '問）';
+}
+
+function updateProgress() {
+  document.getElementById('q-num').textContent =
+    (sessionAnswered + 1) + '問め / ' + qCount + '問';
+  document.getElementById('q-correct').textContent = sessionCorrect + '問正解';
+  document.getElementById('progress-fill').style.width =
+    (sessionAnswered / qCount * 100) + '%';
 }
 
 // ============================================================
 //  QUIZ FLOW
 // ============================================================
 function loadQuestion() {
+  updateProgress();
   const q = activeModule.generate();
   document.getElementById('question-text').innerHTML = q.text;
 
@@ -1291,7 +1625,9 @@ function checkAnswer() {
     ans.textContent   = 'こたえ：' + result.explanation;
   }
 
-  saveRecord(activeModule.id, activeModule._level || 'basic', result.correct);
+  sessionAnswered++;
+  if (result.correct) sessionCorrect++;
+  updateProgress();
 
   document.getElementById('submit-btn').classList.add('hidden');
   document.getElementById('result-card').classList.remove('hidden');
@@ -1305,67 +1641,215 @@ function checkAnswer() {
     }, 120);
   }
 
-  document.getElementById('next-btn').classList.remove('hidden');
+  if (sessionAnswered >= qCount) {
+    saveSessionRecord(activeModule.id, activeModule._level || 'basic', qCount, sessionCorrect);
+    setTimeout(showSessionResult, 500);
+  } else {
+    document.getElementById('next-btn').classList.remove('hidden');
+  }
 }
 
 function nextQuestion() { loadQuestion(); }
 
-// ============================================================
-//  RECORDS
-// ============================================================
-const RECORDS_KEY = 'tokushuzan_records';
+function showSessionResult() {
+  const pct = Math.round(sessionCorrect / qCount * 100);
+  const icon  = pct === 100 ? '🎉' : pct >= 70 ? '😊' : '💪';
+  const cls   = pct === 100 ? 'great' : pct >= 70 ? 'ok' : 'retry';
+  const title = pct === 100 ? 'パーフェクト！' : pct >= 70 ? 'よくできました！' : 'もういちどチャレンジ！';
 
-function loadRecords() {
+  document.getElementById('session-icon').textContent  = icon;
+  const titleEl = document.getElementById('session-title');
+  titleEl.textContent = title;
+  titleEl.className   = 'session-title ' + cls;
+  document.getElementById('session-detail').textContent =
+    qCount + '問中 ' + sessionCorrect + '問正解　正答率 ' + pct + '%';
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('q-num').textContent = qCount + '問 完了！';
+  document.getElementById('session-card').classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('session-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 80);
+}
+
+function restartSession() {
+  initSession();
+  loadQuestion();
+}
+
+// ============================================================
+//  SUPABASE + RECORDS
+// ============================================================
+const SUPABASE_URL  = 'https://jqtmibcnllvbpwvzxlea.supabase.co';
+const SUPABASE_KEY  = 'sb_publishable_9ATK4N1-amyEWwJiCVgOJA_wpQ5Anka';
+const RECORDS_KEY   = 'sansu_records';
+const NICKNAME_KEY  = 'sansuNickname';
+const THEME_PREFIX  = 'sansu:';
+
+let sbClient = null;
+try {
+  sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch(e) { console.warn('Supabase init failed', e); }
+
+// ---- Nickname ----
+function getNickname() {
+  return localStorage.getItem(NICKNAME_KEY) || '';
+}
+
+function updateNicknameBar() {
+  const el = document.getElementById('nickname-display');
+  if (el) el.textContent = getNickname() || '（未設定）';
+}
+
+function showNicknameModal(isChange) {
+  const inp = document.getElementById('nickname-input');
+  inp.value = isChange ? getNickname() : '';
+  document.getElementById('nickname-overlay').classList.remove('hidden');
+  setTimeout(() => inp.focus(), 50);
+}
+
+function confirmNickname() {
+  const name = document.getElementById('nickname-input').value.trim();
+  if (!name) { document.getElementById('nickname-input').focus(); return; }
+  localStorage.setItem(NICKNAME_KEY, name);
+  localStorage.removeItem(RECORDS_KEY);
+  document.getElementById('nickname-overlay').classList.add('hidden');
+  updateNicknameBar();
+}
+
+// ---- Save / Load ----
+function loadLocalRecords() {
   try { return JSON.parse(localStorage.getItem(RECORDS_KEY) || '[]'); }
   catch { return []; }
 }
 
-function saveRecord(moduleId, level, correct) {
-  const recs = loadRecords();
-  recs.push({ date: new Date().toISOString(), moduleId, level, correct });
-  localStorage.setItem(RECORDS_KEY, JSON.stringify(recs));
+function parseTheme(theme) {
+  // "sansu:gcd:basic" → { moduleId: 'gcd', level: 'basic' }
+  const parts = theme.replace(THEME_PREFIX, '').split(':');
+  return { moduleId: parts[0] || '', level: parts[1] || 'basic' };
+}
+
+async function loadRecords() {
+  const nickname = getNickname();
+  if (sbClient && nickname) {
+    try {
+      const { data, error } = await sbClient
+        .from('drill_records')
+        .select('played_at, score, theme, total_q')
+        .eq('user_id', nickname)
+        .like('theme', THEME_PREFIX + '%')
+        .order('played_at', { ascending: true });
+      if (!error && data && data.length > 0) {
+        const recs = data.map(r => {
+          const { moduleId, level } = parseTheme(r.theme);
+          const total   = r.total_q || 1;
+          const correct = Math.round((r.score / 100) * total);
+          return { date: r.played_at, moduleId, level, total, correct, score: r.score };
+        });
+        try { localStorage.setItem(RECORDS_KEY, JSON.stringify(recs)); } catch(e) {}
+        return { data: recs, fallback: false };
+      }
+    } catch(e) { console.warn('Supabase load failed', e); }
+  }
+  return { data: loadLocalRecords(), fallback: true };
+}
+
+async function saveSessionRecord(moduleId, level, total, correct) {
+  const score = Math.round(correct / total * 100);
+  const date  = new Date().toISOString();
+  const rec   = { date, moduleId, level, total, correct, score };
+
+  // update localStorage cache immediately
+  const local = loadLocalRecords();
+  local.push(rec);
+  try { localStorage.setItem(RECORDS_KEY, JSON.stringify(local)); } catch(e) {}
+
+  // push to Supabase
+  const nickname = getNickname();
+  if (sbClient && nickname) {
+    try {
+      await sbClient.from('drill_records').insert({
+        user_id:   nickname,
+        score,
+        theme:     THEME_PREFIX + moduleId + ':' + level,
+        played_at: date,
+        total_q:   total,
+      });
+    } catch(e) { console.warn('Supabase save failed', e); }
+  }
+}
+
+// compute total/correct handling both legacy (boolean) and new (number) records
+function recStats(recs) {
+  let total = 0, correct = 0;
+  recs.forEach(r => {
+    if (typeof r.total === 'number') {
+      total   += r.total;
+      correct += r.correct;
+    } else {
+      total   += 1;
+      correct += r.correct ? 1 : 0;
+    }
+  });
+  return { total, correct, pct: total ? Math.round(correct / total * 100) : null };
+}
+
+function recScore(r) {
+  if (typeof r.score === 'number') return r.score;
+  if (typeof r.total === 'number') return Math.round(r.correct / r.total * 100);
+  return r.correct ? 100 : 0;
 }
 
 // ============================================================
 //  GRAPH SCREEN
 // ============================================================
-let accChart = null;
-let cntChart = null;
+let accChart  = null;
+let cntChart  = null;
+let lineChart = null;
 
 function destroyCharts() {
-  if (accChart) { accChart.destroy(); accChart = null; }
-  if (cntChart) { cntChart.destroy(); cntChart = null; }
+  if (accChart)  { accChart.destroy();  accChart  = null; }
+  if (cntChart)  { cntChart.destroy();  cntChart  = null; }
+  if (lineChart) { lineChart.destroy(); lineChart = null; }
 }
 
-function showGraph() {
-  const title = activeSection ? activeSection.name + ' のきろく' : 'きろく';
+async function showGraph() {
+  const title = activeSection ? activeSection.name + ' のきろく' : 'きろく（全体）';
   document.getElementById('graph-title').textContent = title;
   showScreen('graph-screen');
-  renderGraph();
+  await renderGraph();
 }
 
-function renderGraph() {
+async function renderGraph() {
+  // show loading state
+  document.getElementById('g-total').textContent    = '…';
+  document.getElementById('g-accuracy').textContent = '…';
+  document.getElementById('g-streak').textContent   = '…';
+
   const sectionModuleIds = activeSection ? new Set(activeSection.moduleIds) : null;
-  let recs = loadRecords();
+  const { data: allRecs, fallback } = await loadRecords();
+  let recs = sectionModuleIds ? allRecs.filter(r => sectionModuleIds.has(r.moduleId)) : allRecs;
   if (sectionModuleIds) recs = recs.filter(r => sectionModuleIds.has(r.moduleId));
 
-  const total   = recs.length;
-  const correct = recs.filter(r => r.correct).length;
-  const pct     = total ? Math.round(correct / total * 100) : null;
+  const { total, correct, pct } = recStats(recs);
 
+  // streak: consecutive sessions with 100%
   let streak = 0;
   for (let i = recs.length - 1; i >= 0; i--) {
-    if (recs[i].correct) streak++; else break;
+    if (recScore(recs[i]) === 100) streak++; else break;
   }
 
   document.getElementById('g-total').textContent    = total + '問';
   document.getElementById('g-accuracy').textContent = pct !== null ? pct + '%' : '-%';
-  document.getElementById('g-streak').textContent   = streak + '問';
+  document.getElementById('g-streak').textContent   = streak + '回';
 
+  // recent dots (per session, newest first, up to 20)
   const recent = recs.slice(-20).reverse();
   const dotsEl = document.getElementById('g-dots');
   dotsEl.innerHTML = recent.length
-    ? recent.map(r => `<span class="result-dot">${r.correct ? '⭕' : '❌'}</span>`).join('')
+    ? recent.map(r => {
+        const s = recScore(r);
+        return `<span class="result-dot">${s === 100 ? '🎉' : s >= 70 ? '⭕' : '❌'}</span>`;
+      }).join('')
     : '<span class="no-records">まだ きろくがありません</span>';
 
   // per-module stats
@@ -1378,39 +1862,56 @@ function renderGraph() {
                   'rgba(231,76,60,0.85)', 'rgba(142,68,173,0.85)', 'rgba(52,152,219,0.85)'];
   const colors = sectionMods.map((_, i) => COLORS[i % COLORS.length]);
 
-  const modAcc = sectionMods.map(m => {
-    const mr = recs.filter(r => r.moduleId === m.id);
-    return mr.length ? Math.round(mr.filter(r => r.correct).length / mr.length * 100) : null;
-  });
-  const modCounts = sectionMods.map(m => recs.filter(r => r.moduleId === m.id).length);
+  const modAcc    = sectionMods.map(m => { const s = recStats(recs.filter(r => r.moduleId === m.id)); return s.pct; });
+  const modCounts = sectionMods.map(m => recStats(recs.filter(r => r.moduleId === m.id)).total);
 
   destroyCharts();
 
-  const accEmptyEl = document.getElementById('g-acc-empty');
-  const cntEmptyEl = document.getElementById('g-cnt-empty');
-  const accCanvas  = document.getElementById('g-acc-chart');
-  const cntCanvas  = document.getElementById('g-cnt-chart');
+  const accEmptyEl  = document.getElementById('g-acc-empty');
+  const cntEmptyEl  = document.getElementById('g-cnt-empty');
+  const lineEmptyEl = document.getElementById('g-line-empty');
+  const accCanvas   = document.getElementById('g-acc-chart');
+  const cntCanvas   = document.getElementById('g-cnt-chart');
+  const lineCanvas  = document.getElementById('g-line-chart');
 
-  if (total === 0) {
-    accEmptyEl.classList.remove('hidden');
-    accCanvas.style.display = 'none';
-    cntEmptyEl.classList.remove('hidden');
-    cntCanvas.style.display = 'none';
+  // history table
+  const tbody = document.getElementById('g-history-body');
+  const histEmpty = document.getElementById('g-history-empty');
+  if (recs.length === 0) {
+    accEmptyEl.classList.remove('hidden');  accCanvas.style.display  = 'none';
+    cntEmptyEl.classList.remove('hidden');  cntCanvas.style.display  = 'none';
+    lineEmptyEl.classList.remove('hidden'); lineCanvas.style.display = 'none';
+    tbody.innerHTML = '';
+    histEmpty.classList.remove('hidden');
+    document.getElementById('g-history-table').style.display = 'none';
     return;
   }
 
-  accEmptyEl.classList.add('hidden');
-  accCanvas.style.display = '';
+  document.getElementById('g-history-table').style.display = '';
+  histEmpty.classList.add('hidden');
+  tbody.innerHTML = recs.slice().reverse().slice(0, 20).map(r => {
+    const d  = new Date(r.date);
+    const ds = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const tot = typeof r.total === 'number' ? r.total : 1;
+    const cor = typeof r.total === 'number' ? r.correct : (r.correct ? 1 : 0);
+    const sc  = recScore(r);
+    const cls = sc >= 80 ? 'hist-high' : sc >= 60 ? 'hist-mid' : 'hist-low';
+    const mod = modules.find(m => m.id === r.moduleId);
+    return `<tr>
+      <td>${ds}</td>
+      <td>${mod ? mod.name : r.moduleId}</td>
+      <td>${tot}問中 <strong>${cor}問</strong></td>
+      <td class="${cls}">${sc}%</td>
+    </tr>`;
+  }).join('');
+
+  // accuracy bar chart
+  accEmptyEl.classList.add('hidden'); accCanvas.style.display = '';
   accChart = new Chart(accCanvas.getContext('2d'), {
     type: 'bar',
     data: {
       labels: modLabels,
-      datasets: [{
-        data: modAcc.map(v => v ?? 0),
-        backgroundColor: colors,
-        borderRadius: 10,
-        borderSkipped: false,
-      }],
+      datasets: [{ data: modAcc.map(v => v ?? 0), backgroundColor: colors, borderRadius: 10, borderSkipped: false }],
     },
     options: {
       plugins: { legend: { display: false } },
@@ -1421,18 +1922,13 @@ function renderGraph() {
     },
   });
 
-  cntEmptyEl.classList.add('hidden');
-  cntCanvas.style.display = '';
+  // question count bar chart
+  cntEmptyEl.classList.add('hidden'); cntCanvas.style.display = '';
   cntChart = new Chart(cntCanvas.getContext('2d'), {
     type: 'bar',
     data: {
       labels: modLabels,
-      datasets: [{
-        data: modCounts,
-        backgroundColor: colors,
-        borderRadius: 10,
-        borderSkipped: false,
-      }],
+      datasets: [{ data: modCounts, backgroundColor: colors, borderRadius: 10, borderSkipped: false }],
     },
     options: {
       plugins: { legend: { display: false } },
@@ -1443,18 +1939,53 @@ function renderGraph() {
       },
     },
   });
+
+  // line chart (score per session)
+  lineEmptyEl.classList.add('hidden'); lineCanvas.style.display = '';
+  const lineLabels = recs.map((r, i) => {
+    const d = new Date(r.date);
+    return `${d.getMonth()+1}/${d.getDate()} (${i+1})`;
+  });
+  const lineData = recs.map(r => recScore(r));
+  const pointColors = lineData.map(v => v === 100 ? '#27ae60' : v >= 70 ? '#f5a623' : '#e74c3c');
+  lineChart = new Chart(lineCanvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: lineLabels,
+      datasets: [{
+        data: lineData,
+        borderColor: '#4a90d9',
+        backgroundColor: 'rgba(74,144,217,0.10)',
+        borderWidth: 2.5,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: pointColors,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        tension: 0.3,
+        fill: true,
+      }],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#eee' } },
+        x: { ticks: { maxRotation: 45, font: { size: 10 } }, grid: { display: false } },
+      },
+    },
+  });
 }
 
-function clearRecords() {
-  if (!confirm('このセクションのきろくを ぜんぶ けしますか？')) return;
-  if (activeSection) {
-    const ids = new Set(activeSection.moduleIds);
-    const kept = loadRecords().filter(r => !ids.has(r.moduleId));
-    localStorage.setItem(RECORDS_KEY, JSON.stringify(kept));
-  } else {
-    localStorage.removeItem(RECORDS_KEY);
+async function clearRecords() {
+  if (!confirm('きろくをぜんぶ けしますか？')) return;
+  localStorage.removeItem(RECORDS_KEY);
+  if (sbClient && getNickname()) {
+    try {
+      await sbClient.from('drill_records').delete()
+        .eq('user_id', getNickname())
+        .like('theme', THEME_PREFIX + '%');
+    } catch(e) { console.warn('Supabase delete failed', e); }
   }
-  renderGraph();
+  await renderGraph();
 }
 
 // ============================================================
@@ -1710,6 +2241,8 @@ function renderExplanation(data, diagramId, stepsId, titleId) {
 //  INIT
 // ============================================================
 renderTop();
+updateNicknameBar();
+if (!getNickname()) showNicknameModal(false);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
