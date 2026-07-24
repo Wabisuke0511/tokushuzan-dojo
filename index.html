@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -2146,15 +2146,1161 @@ registerModule({
 });
 
 // ============================================================
-//  COMING SOON (特殊算)
+//  特殊算 実装
 // ============================================================
-[
-  { id: 'tabibito', name: '旅人算',   icon: '🚶' },
-  { id: 'ueki',     name: '植木算',   icon: '🌳' },
-  { id: 'ryusui',   name: '流水算',   icon: '🌊' },
-  { id: 'sasume',   name: '差集め算', icon: '📐' },
-  { id: 'kafusoku', name: '過不足算', icon: '⚖️' },
-].forEach(m => registerModule({ ...m, unlocked: false, generate: null, checkAnswer: null }));
+// ============================================================
+//  特殊算 モジュール: 旅人算・植木算・流水算・過不足算・差集め算
+// ============================================================
+
+// --- 旅人算 ---
+registerModule({
+  id: 'tabibito',
+  name: '旅人算',
+  icon: '🚶',
+  unlocked: true,
+  _level: 'basic',
+  _current: null,
+
+  generate() {
+    if (this._level === 'juken')  return this._genJuken();
+    if (this._level === 'applied') return this._genApplied();
+    return this._genBasic();
+  },
+
+  _genBasic() {
+    const tpls = [this._tplMeet, this._tplMeetPlace];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genApplied() {
+    const tpls = [this._tplChase, this._tplPond];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genJuken() {
+    const tpls = [this._jTplSpeedChange, this._jTplThree];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  // 向かい合い → 出会い時間
+  _tplMeet() {
+    let vA, vB, D, T;
+    do {
+      vA = randInt(3, 9) * 10;
+      vB = randInt(3, 9) * 10;
+      D  = randInt(4, 14) * (vA + vB);
+    } while ((D % (vA + vB)) !== 0);
+    T = D / (vA + vB);
+    this._current = {
+      nA: T, nameA: '出会うまでの時間', unitA: '分',
+      _title: 'かいせつ（向かい合い旅人算）',
+      _steps: [
+        `2人が 1分間に近づく距離：${vA} ＋ ${vB} ＝ <em>${vA + vB}m</em>`,
+        `出会うまでの時間：${D} ÷ ${vA + vB} ＝ <em>${T}分</em>`,
+      ],
+    };
+    return {
+      text: `AとBが <span class="num">${D}</span>m 離れた地点から<br>向かい合って歩き始めた。<br>Aは分速 <span class="num">${vA}</span>m、Bは分速 <span class="num">${vB}</span>m。<br>何分後に出会う？`,
+      inputs: [{ id: 'ans-A', label: '出会うまでの時間', unit: '分' }],
+    };
+  },
+
+  // 向かい合い → 出会い地点（Aから何m）
+  _tplMeetPlace() {
+    let vA, vB, D, T, dA;
+    do {
+      vA = randInt(3, 9) * 10;
+      vB = randInt(3, 9) * 10;
+      D  = randInt(4, 14) * (vA + vB);
+    } while ((D % (vA + vB)) !== 0);
+    T  = D / (vA + vB);
+    dA = vA * T;
+    this._current = {
+      nA: dA, nameA: 'Aから出会い地点まで', unitA: 'm',
+      _title: 'かいせつ（出会い地点）',
+      _steps: [
+        `出会うまでの時間：${D} ÷ (${vA}＋${vB}) ＝ <em>${T}分</em>`,
+        `Aが進んだ距離：${vA} × ${T} ＝ <em>${dA}m</em>`,
+      ],
+    };
+    return {
+      text: `AとBが <span class="num">${D}</span>m 離れた地点から<br>向かい合って歩き始めた。<br>Aは分速 <span class="num">${vA}</span>m、Bは分速 <span class="num">${vB}</span>m。<br>出会い地点はAから何m？`,
+      inputs: [{ id: 'ans-A', label: 'Aから出会い地点まで', unit: 'm' }],
+    };
+  },
+
+  // 追いかけ算
+  _tplChase() {
+    let vA, vB, lead, T;
+    do {
+      vA   = randInt(4, 8) * 10;
+      vB   = randInt(3, 6) * 10 + vA;
+      lead = randInt(3, 10) * (vB - vA);
+    } while (lead > 1500);
+    T = lead / (vB - vA);
+    this._current = {
+      nA: T, nameA: '追いつくまでの時間', unitA: '分',
+      _title: 'かいせつ（追いかけ旅人算）',
+      _steps: [
+        `1分間に縮まる差：${vB} − ${vA} ＝ <em>${vB - vA}m</em>`,
+        `追いつくまでの時間：${lead} ÷ ${vB - vA} ＝ <em>${T}分</em>`,
+      ],
+    };
+    return {
+      text: `Aは <span class="num">${lead}</span>m 先を分速 <span class="num">${vA}</span>m で歩いている。<br>Bが分速 <span class="num">${vB}</span>m でAを追いかける。<br>何分後に追いつく？`,
+      inputs: [{ id: 'ans-A', label: '追いつくまでの時間', unit: '分' }],
+    };
+  },
+
+  // 池の周回
+  _tplPond() {
+    let vA, vB, L, T;
+    const opposite = randInt(0, 1) === 1;
+    do {
+      vA = randInt(4, 9) * 10;
+      vB = randInt(4, 9) * 10;
+      if (opposite) {
+        L = randInt(3, 10) * (vA + vB);
+      } else {
+        if (vA === vB) vB += 10;
+        const diff = Math.abs(vA - vB);
+        L = randInt(3, 10) * diff;
+      }
+    } while (L > 3000 || L < 100);
+    T = opposite ? L / (vA + vB) : L / Math.abs(vA - vB);
+    const dir = opposite ? '反対方向' : '同じ方向';
+    const desc = opposite ? '初めて出会う' : '初めて追いつく';
+    this._current = {
+      nA: T, nameA: desc + 'までの時間', unitA: '分',
+      _title: `かいせつ（池の周回・${dir}）`,
+      _steps: opposite
+        ? [
+            `反対方向なので 1分に縮まる差：${vA} ＋ ${vB} ＝ <em>${vA + vB}m</em>`,
+            `出会うまでの時間：${L} ÷ ${vA + vB} ＝ <em>${T}分</em>`,
+          ]
+        : [
+            `同じ方向なので 1分に縮まる差：|${vA} − ${vB}| ＝ <em>${Math.abs(vA - vB)}m</em>`,
+            `追いつくまでの時間：${L} ÷ ${Math.abs(vA - vB)} ＝ <em>${T}分</em>`,
+          ],
+    };
+    return {
+      text: `周囲 <span class="num">${L}</span>m の池の周りを<br>同じ地点から <span class="num">${dir}</span> に<br>Aは分速 <span class="num">${vA}</span>m、Bは分速 <span class="num">${vB}</span>m で進む。<br>${desc}のは何分後？`,
+      inputs: [{ id: 'ans-A', label: `${desc}まで`, unit: '分' }],
+    };
+  },
+
+  // 途中で速度変化 → 速度を上げたとき残り何m
+  _jTplSpeedChange() {
+    let vA1, vA2, C, D, T, t1, t2, rem;
+    do {
+      vA1 = randInt(5, 9) * 10;
+      vA2 = vA1 + randInt(2, 5) * 10;
+      t1  = randInt(3, 8);
+      t2  = randInt(3, 8);
+      C   = vA1 * t1;
+      D   = C + vA2 * t2;
+      T   = t1 + t2;
+      rem = D - C;
+    } while (D > 3000 || rem % 10 !== 0);
+    this._current = {
+      nA: rem, nameA: '速度を上げたとき残りの距離', unitA: 'm',
+      _title: 'かいせつ（速度変化）',
+      _steps: [
+        `最初の ${t1}分で進んだ距離：${vA1} × ${t1} ＝ <em>${C}m</em>`,
+        `残りの距離：${D} − ${C} ＝ <em>${rem}m</em>`,
+      ],
+    };
+    return {
+      text: `Aは <span class="num">${D}</span>m の道を歩く。<br>最初は分速 <span class="num">${vA1}</span>m で <span class="num">${t1}</span>分 歩いた後、<br>分速 <span class="num">${vA2}</span>m に速度を上げた。<br>速度を上げたとき、残りは何m？`,
+      inputs: [{ id: 'ans-A', label: '残りの距離', unit: 'm' }],
+    };
+  },
+
+  // 3人問題：AとBが向かい合い出会い → その後CとBが出会うまで
+  _jTplThree() {
+    let vA, vB, vC, D, T_AB, dA, dB, dC_at_meet, remBC, T_BC;
+    do {
+      vA = randInt(4, 8) * 10;
+      vB = randInt(4, 8) * 10;
+      vC = randInt(3, 7) * 10;
+      const sumAB = vA + vB;
+      D  = randInt(4, 10) * sumAB;
+      T_AB = D / sumAB;
+      dA   = vA * T_AB;
+      dB   = D - dA;
+      // C starts at same point as A, heading toward B
+      dC_at_meet = vC * T_AB;
+      remBC = dA - dC_at_meet; // distance between C and B's current position... wait
+      // At time T_AB: B is at position D - dB = dA from A's start
+      // C is at position dC_at_meet from A's start (same direction as A)
+      // B is at position dA from A's start, moving toward A (so now away from B's start)
+      // Actually B was moving toward A, so at meet point they're at dA from A's start
+      // After meeting, B continues in same direction (past meeting point)?
+      // Standard problem: B keeps walking, C is still walking toward B's original start
+      // Distance between C and B at meeting time = dA - dC_at_meet (C hasn't reached meet point yet)
+      // After T_AB, C and B are approaching each other: C at dC_at_meet heading right, B at dA heading left (back toward B's start)
+      // They close at rate vC + vB
+      remBC = dA - dC_at_meet;
+      if (remBC <= 0) continue;
+      T_BC = remBC / (vC + vB);
+    } while (!Number.isInteger(T_BC) || T_BC <= 0 || T_BC > 20 || D > 3000);
+    this._current = {
+      nA: T_BC, nameA: 'AとBが出会った後、CとBが出会うまでの時間', unitA: '分',
+      _title: 'かいせつ（3人旅人算）',
+      _steps: [
+        `AとBが出会うまでの時間：${D} ÷ (${vA}＋${vB}) ＝ <em>${T_AB}分</em>`,
+        `その時点でCは：${vC} × ${T_AB} ＝ <em>${dC_at_meet}m</em> 進んでいる`,
+        `出会い地点とCとの距離：${dA} − ${dC_at_meet} ＝ <em>${remBC}m</em>`,
+        `CとBが近づく速さ：${vC} ＋ ${vB} ＝ <em>${vC + vB}m/分</em>`,
+        `CとBが出会うまで：${remBC} ÷ ${vC + vB} ＝ <em>${T_BC}分</em>`,
+      ],
+    };
+    return {
+      text: `A・B・Cが <span class="num">${D}</span>m 離れた場所から同時に出発。<br>AとBは向かい合い（Aは分速 <span class="num">${vA}</span>m、Bは分速 <span class="num">${vB}</span>m）、<br>CはAの地点からBに向かって分速 <span class="num">${vC}</span>m で進む。<br>AとBが出会ってから何分後にCとBが出会う？`,
+      inputs: [{ id: 'ans-A', label: 'AとBが出会った後', unit: '分' }],
+    };
+  },
+
+  checkAnswer() {
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    const cur = this._current;
+    if (cur.nB !== undefined) {
+      const b = parseInt(document.getElementById('ans-B').value, 10);
+      return { correct: a === cur.nA && b === cur.nB, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}、${cur.nameB} ${cur.nB}${cur.unitB}` };
+    }
+    return { correct: a === cur.nA, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}` };
+  },
+
+  explain() {
+    const c = this._current;
+    if (c && c._steps) return { type: 'steps', title: c._title || 'かいせつ', steps: c._steps };
+    return { type: 'steps', title: 'かいせつ', steps: [] };
+  },
+});
+
+// --- 植木算 ---
+registerModule({
+  id: 'ueki',
+  name: '植木算',
+  icon: '🌳',
+  unlocked: true,
+  _level: 'basic',
+  _current: null,
+
+  generate() {
+    if (this._level === 'juken')  return this._genJuken();
+    if (this._level === 'applied') return this._genApplied();
+    return this._genBasic();
+  },
+
+  _genBasic() {
+    const tpls = [this._tplLineTrees, this._tplLineLength];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genApplied() {
+    const tpls = [this._tplCircle, this._tplOneEnd];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genJuken() {
+    const tpls = [this._jTplRect, this._jTplDoubleRow];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  // 両端あり → 本数
+  _tplLineTrees() {
+    const d = randInt(3, 10);
+    const n = randInt(4, 12);
+    const L = d * (n - 1);
+    this._current = {
+      nA: n, nameA: '必要な木の本数', unitA: '本',
+      _title: 'かいせつ（植木算・両端あり）',
+      _steps: [
+        `両端あり：間の数 ＝ 本数 − 1`,
+        `間の数：${L} ÷ ${d} ＝ <em>${n - 1}</em>`,
+        `本数：${n - 1} ＋ 1 ＝ <em>${n}本</em>`,
+      ],
+    };
+    return {
+      text: `<span class="num">${L}</span>m の道に、両端を含め<br><span class="num">${d}</span>m おきに木を植える。<br>何本必要？`,
+      inputs: [{ id: 'ans-A', label: '木の本数', unit: '本' }],
+    };
+  },
+
+  // 両端あり → 長さ
+  _tplLineLength() {
+    const d = randInt(3, 10);
+    const n = randInt(4, 12);
+    const L = d * (n - 1);
+    this._current = {
+      nA: L, nameA: '道の長さ', unitA: 'm',
+      _title: 'かいせつ（植木算・道の長さ）',
+      _steps: [
+        `両端あり：間の数 ＝ ${n} − 1 ＝ <em>${n - 1}</em>`,
+        `道の長さ：${d} × ${n - 1} ＝ <em>${L}m</em>`,
+      ],
+    };
+    return {
+      text: `<span class="num">${d}</span>m おきに木を植えたら、<br>両端を含めて <span class="num">${n}</span>本 必要だった。<br>道の長さは何m？`,
+      inputs: [{ id: 'ans-A', label: '道の長さ', unit: 'm' }],
+    };
+  },
+
+  // 池の周り → 間隔
+  _tplCircle() {
+    const n = randInt(4, 12);
+    const d = randInt(3, 10);
+    const L = n * d;
+    this._current = {
+      nA: d, nameA: '間隔', unitA: 'm',
+      _title: 'かいせつ（植木算・輪）',
+      _steps: [
+        `輪（円）の場合：間の数 ＝ 本数（端がないため）`,
+        `間隔：${L} ÷ ${n} ＝ <em>${d}m</em>`,
+      ],
+    };
+    return {
+      text: `周囲 <span class="num">${L}</span>m の池の周りに<br><span class="num">${n}</span>本 の木を等間隔に植える。<br>間隔は何m？`,
+      inputs: [{ id: 'ans-A', label: '間隔', unit: 'm' }],
+    };
+  },
+
+  // 片端のみ → 本数
+  _tplOneEnd() {
+    const d = randInt(3, 10);
+    const n = randInt(4, 12);
+    const L = d * n;
+    this._current = {
+      nA: n, nameA: '木の本数', unitA: '本',
+      _title: 'かいせつ（植木算・片端あり）',
+      _steps: [
+        `片端あり：間の数 ＝ 本数`,
+        `本数：${L} ÷ ${d} ＝ <em>${n}本</em>`,
+      ],
+    };
+    return {
+      text: `<span class="num">${L}</span>m の道に、一方の端だけに植え、<br><span class="num">${d}</span>m おきに木を植える。<br>何本必要？`,
+      inputs: [{ id: 'ans-A', label: '木の本数', unit: '本' }],
+    };
+  },
+
+  // 長方形周囲 → 最大間隔(gcd)と最小本数（2答）
+  _jTplRect() {
+    function gcdCalc(a, b) { while (b) { [a, b] = [b, a % b]; } return a; }
+    let a, b, g, minN;
+    do {
+      a = randInt(2, 8) * 10;
+      b = randInt(2, 8) * 10;
+      if (a === b) b += 10;
+      g = gcdCalc(a, b);
+      minN = 2 * (a / g + b / g);
+    } while (minN > 40 || g < 2);
+    this._current = {
+      nA: g, nB: minN,
+      nameA: '最大の間隔', unitA: 'm',
+      nameB: '最小の本数', unitB: '本',
+      _title: 'かいせつ（長方形の植木算）',
+      _steps: [
+        `4つの角には必ず木を植えるので、間隔は縦・横の公約数`,
+        `縦 ${a}m と横 ${b}m の最大公約数：<em>${g}m</em>（最大間隔）`,
+        `縦の木の数：${a} ÷ ${g} ＝ ${a / g}本の間 → 木は ${a / g}本（角共有）`,
+        `横の木の数：${b} ÷ ${g} ＝ ${b / g}本の間 → 木は ${b / g}本（角共有）`,
+        `合計：2 × (${a / g} ＋ ${b / g}) ＝ <em>${minN}本</em>（最小本数）`,
+      ],
+    };
+    return {
+      text: `縦 <span class="num">${a}</span>m、横 <span class="num">${b}</span>m の長方形の<br>周囲に等間隔で木を植える。<br>4つの角には必ず植える。<br>最大の間隔は何m？<br>そのとき最小で何本必要？`,
+      inputs: [
+        { id: 'ans-A', label: '最大の間隔', unit: 'm' },
+        { id: 'ans-B', label: '最小の本数', unit: '本' },
+      ],
+    };
+  },
+
+  // 道の両側に別間隔 → 合計本数（1答）
+  _jTplDoubleRow() {
+    const dA = randInt(3, 8);
+    let dB = randInt(3, 8);
+    if (dB === dA) dB++;
+    const nOpts = [20, 30, 40, 60];
+    let L;
+    do { L = nOpts[randInt(0, nOpts.length - 1)]; } while (L % dA !== 0 || L % dB !== 0);
+    const nA = L / dA + 1;
+    const nB = L / dB + 1;
+    const total = nA + nB;
+    this._current = {
+      nA: total, nameA: '2列合わせた木の総本数', unitA: '本',
+      _title: 'かいせつ（両側植木算）',
+      _steps: [
+        `左側：${L} ÷ ${dA} ＋ 1 ＝ <em>${nA}本</em>`,
+        `右側：${L} ÷ ${dB} ＋ 1 ＝ <em>${nB}本</em>`,
+        `合計：${nA} ＋ ${nB} ＝ <em>${total}本</em>`,
+      ],
+    };
+    return {
+      text: `<span class="num">${L}</span>m の道の両側に木を植える（両端あり）。<br>左側は <span class="num">${dA}</span>m おき、<br>右側は <span class="num">${dB}</span>m おき。<br>2列合わせて何本必要？`,
+      inputs: [{ id: 'ans-A', label: '合計の本数', unit: '本' }],
+    };
+  },
+
+  checkAnswer() {
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    const cur = this._current;
+    if (cur.nB !== undefined) {
+      const b = parseInt(document.getElementById('ans-B').value, 10);
+      return { correct: a === cur.nA && b === cur.nB, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}、${cur.nameB} ${cur.nB}${cur.unitB}` };
+    }
+    return { correct: a === cur.nA, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}` };
+  },
+
+  explain() {
+    const c = this._current;
+    if (c && c._steps) return { type: 'steps', title: c._title || 'かいせつ', steps: c._steps };
+    return { type: 'steps', title: 'かいせつ', steps: [] };
+  },
+});
+
+// --- 流水算 ---
+registerModule({
+  id: 'ryusui',
+  name: '流水算',
+  icon: '🌊',
+  unlocked: true,
+  _level: 'basic',
+  _current: null,
+
+  generate() {
+    if (this._level === 'juken')  return this._genJuken();
+    if (this._level === 'applied') return this._genApplied();
+    return this._genBasic();
+  },
+
+  _genBasic() {
+    const tpls = [this._tplFindTime, this._tplFindDist];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genApplied() {
+    const tpls = [this._tplFindSpeed, this._tplRoundTrip];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genJuken() {
+    const tpls = [this._jTplFindBothSpeed, this._jTplTimeRatio];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  // 静水速v、流速r、距離D → 上り/下り時間（2答）
+  _tplFindTime() {
+    let v, r, D, tUp, tDown;
+    do {
+      r = randInt(1, 4);
+      v = r + randInt(2, 5);
+      tUp   = randInt(2, 6);
+      tDown = randInt(1, tUp - 1);
+      D = (v - r) * tUp;
+    } while (D !== (v + r) * tDown || D > 60);
+    this._current = {
+      nA: tUp, nB: tDown,
+      nameA: '上りの時間', unitA: '時間',
+      nameB: '下りの時間', unitB: '時間',
+      _title: 'かいせつ（流水算・時間を求める）',
+      _steps: [
+        `上りの速さ：${v} − ${r} ＝ <em>${v - r}km/h</em>`,
+        `下りの速さ：${v} ＋ ${r} ＝ <em>${v + r}km/h</em>`,
+        `上りの時間：${D} ÷ ${v - r} ＝ <em>${tUp}時間</em>`,
+        `下りの時間：${D} ÷ ${v + r} ＝ <em>${tDown}時間</em>`,
+      ],
+    };
+    return {
+      text: `静水時の速さ <span class="num">${v}</span>km/h の船、<br>川の流れは <span class="num">${r}</span>km/h。<br><span class="num">${D}</span>km の区間を<br>上りと下りにかかる時間はそれぞれ何時間？`,
+      inputs: [
+        { id: 'ans-A', label: '上りの時間', unit: '時間' },
+        { id: 'ans-B', label: '下りの時間', unit: '時間' },
+      ],
+    };
+  },
+
+  // 静水速v、流速r、上りT1時間・下りT2時間 → 距離（2答）
+  _tplFindDist() {
+    let v, r, T1, T2;
+    do {
+      r  = randInt(1, 4);
+      v  = r + randInt(2, 6);
+      T1 = randInt(2, 5);
+      T2 = randInt(1, 4);
+    } while ((v + r) * T2 > 60 || (v - r) * T1 > 60);
+    const dUp   = (v - r) * T1;
+    const dDown = (v + r) * T2;
+    this._current = {
+      nA: dUp, nB: dDown,
+      nameA: '上りの距離', unitA: 'km',
+      nameB: '下りの距離', unitB: 'km',
+      _title: 'かいせつ（流水算・距離を求める）',
+      _steps: [
+        `上りの速さ：${v} − ${r} ＝ <em>${v - r}km/h</em>`,
+        `下りの速さ：${v} ＋ ${r} ＝ <em>${v + r}km/h</em>`,
+        `上りの距離：${v - r} × ${T1} ＝ <em>${dUp}km</em>`,
+        `下りの距離：${v + r} × ${T2} ＝ <em>${dDown}km</em>`,
+      ],
+    };
+    return {
+      text: `静水時の速さ <span class="num">${v}</span>km/h の船、<br>川の流れは <span class="num">${r}</span>km/h。<br>上りに <span class="num">${T1}</span>時間、下りに <span class="num">${T2}</span>時間 かかった。<br>それぞれ何km？`,
+      inputs: [
+        { id: 'ans-A', label: '上りの距離', unit: 'km' },
+        { id: 'ans-B', label: '下りの距離', unit: 'km' },
+      ],
+    };
+  },
+
+  // 上りT1・下りT2・距離D → 静水速と流速（2答）
+  _tplFindSpeed() {
+    let T1, T2, up, down, v, r;
+    do {
+      T1 = randInt(2, 5);
+      T2 = randInt(1, T1 - 1);
+      up = randInt(2, 8);
+      down = up + randInt(2, 6);
+      v = (up + down) / 2;
+      r = (down - up) / 2;
+    } while (!Number.isInteger(v) || !Number.isInteger(r) || r < 1 || v > 20);
+    const D = up * T1;
+    this._current = {
+      nA: v, nB: r,
+      nameA: '静水時の速さ', unitA: 'km/h',
+      nameB: '川の流れの速さ', unitB: 'km/h',
+      _title: 'かいせつ（流水算・速さを求める）',
+      _steps: [
+        `上りの速さ：${D} ÷ ${T1} ＝ <em>${up}km/h</em>`,
+        `下りの速さ：${D} ÷ ${T2} ＝ <em>${down}km/h</em>`,
+        `静水時の速さ：(${up} ＋ ${down}) ÷ 2 ＝ <em>${v}km/h</em>`,
+        `流れの速さ：(${down} − ${up}) ÷ 2 ＝ <em>${r}km/h</em>`,
+      ],
+    };
+    return {
+      text: `ある区間 <span class="num">${D}</span>km を<br>上りに <span class="num">${T1}</span>時間、下りに <span class="num">${T2}</span>時間 かかった。<br>静水時の速さと川の流速は？`,
+      inputs: [
+        { id: 'ans-A', label: '静水時の速さ', unit: 'km/h' },
+        { id: 'ans-B', label: '川の流速', unit: 'km/h' },
+      ],
+    };
+  },
+
+  // 往復T時間 → 片道距離（1答）
+  _tplRoundTrip() {
+    let v, r, T, D;
+    do {
+      r = randInt(1, 3);
+      v = r + randInt(3, 7);
+      T = randInt(3, 10);
+      // D/(v-r) + D/(v+r) = T → D * 2v / (v²-r²) = T → D = T*(v²-r²)/(2v)
+      const num = T * (v * v - r * r);
+      if (num % (2 * v) !== 0) continue;
+      D = num / (2 * v);
+    } while (!D || D > 60 || D < 3);
+    const tUp   = D / (v - r);
+    const tDown = D / (v + r);
+    this._current = {
+      nA: D, nameA: '片道の距離', unitA: 'km',
+      _title: 'かいせつ（流水算・往復）',
+      _steps: [
+        `上りの速さ：${v} − ${r} ＝ <em>${v - r}km/h</em>`,
+        `下りの速さ：${v} ＋ ${r} ＝ <em>${v + r}km/h</em>`,
+        `距離を□kmとする：□÷${v - r} ＋ □÷${v + r} ＝ ${T}`,
+        `□ × (1/${v - r} ＋ 1/${v + r}) ＝ ${T}`,
+        `□ × ${2 * v} ÷ ${(v - r) * (v + r)} ＝ ${T}`,
+        `□ ＝ ${T} × ${(v - r) * (v + r)} ÷ ${2 * v} ＝ <em>${D}km</em>`,
+      ],
+    };
+    return {
+      text: `静水時の速さ <span class="num">${v}</span>km/h の船、<br>川の流れは <span class="num">${r}</span>km/h。<br>ある区間を往復したら <span class="num">${T}</span>時間 かかった。<br>片道は何km？`,
+      inputs: [{ id: 'ans-A', label: '片道の距離', unit: 'km' }],
+    };
+  },
+
+  // 上りD1km/T1h・下りD2km/T2h（D1≠D2）→ 静水速と流速
+  _jTplFindBothSpeed() {
+    let up, down, v, r, T1, T2, D1, D2;
+    do {
+      up = randInt(3, 8);
+      down = up + randInt(2, 6);
+      v = (up + down) / 2;
+      r = (down - up) / 2;
+      T1 = randInt(2, 5);
+      T2 = randInt(2, 5);
+      D1 = up * T1;
+      D2 = down * T2;
+    } while (!Number.isInteger(v) || !Number.isInteger(r) || r < 1 || D1 === D2 || D1 > 60 || D2 > 60);
+    this._current = {
+      nA: v, nB: r,
+      nameA: '静水時の速さ', unitA: 'km/h',
+      nameB: '川の流れの速さ', unitB: 'km/h',
+      _title: 'かいせつ（流水算・異なる距離）',
+      _steps: [
+        `上りの速さ：${D1} ÷ ${T1} ＝ <em>${up}km/h</em>`,
+        `下りの速さ：${D2} ÷ ${T2} ＝ <em>${down}km/h</em>`,
+        `静水時の速さ：(${up} ＋ ${down}) ÷ 2 ＝ <em>${v}km/h</em>`,
+        `流れの速さ：(${down} − ${up}) ÷ 2 ＝ <em>${r}km/h</em>`,
+      ],
+    };
+    return {
+      text: `川を上るとき <span class="num">${D1}</span>km を <span class="num">${T1}</span>時間、<br>下るとき <span class="num">${D2}</span>km を <span class="num">${T2}</span>時間 かかった。<br>静水時の速さと川の流速は？`,
+      inputs: [
+        { id: 'ans-A', label: '静水時の速さ', unit: 'km/h' },
+        { id: 'ans-B', label: '川の流速', unit: 'km/h' },
+      ],
+    };
+  },
+
+  // 上り下り時間の比 p:q、静水速v → 流速（1答）
+  _jTplTimeRatio() {
+    // timeUp/timeDown = (v+r)/(v-r) = p/q → p*(v-r) = q*(v+r) → r = v*(p-q)/(p+q)
+    let p, q, v, r;
+    do {
+      p = randInt(2, 5);
+      q = randInt(1, p - 1);
+      v = randInt(4, 12);
+      // r = v*(p-q)/(p+q)
+      const num = v * (p - q);
+      const den = p + q;
+      if (num % den !== 0) continue;
+      r = num / den;
+    } while (!r || r < 1 || r >= v);
+    this._current = {
+      nA: r, nameA: '川の流れの速さ', unitA: 'km/h',
+      _title: 'かいせつ（時間の比から流速を求める）',
+      _steps: [
+        `上り時間 : 下り時間 ＝ ${p} : ${q}`,
+        `距離が同じなら 時間の比 ＝ 速さの逆比`,
+        `上りの速さ : 下りの速さ ＝ ${q} : ${p}`,
+        `上りの速さ ＝ v − r ＝ <em>${v - r}km/h</em>、下りの速さ ＝ v ＋ r ＝ <em>${v + r}km/h</em>`,
+        `(v − r) : (v ＋ r) ＝ ${q} : ${p} から<br>${p}(${v} − r) ＝ ${q}(${v} ＋ r)`,
+        `流速 r ＝ ${v} × (${p} − ${q}) ÷ (${p} ＋ ${q}) ＝ <em>${r}km/h</em>`,
+      ],
+    };
+    return {
+      text: `静水時の速さ <span class="num">${v}</span>km/h の船。<br>同じ区間を上りと下りで行くと<br>時間の比は <span class="num">${p}</span>：<span class="num">${q}</span>。<br>川の流速は何km/h？`,
+      inputs: [{ id: 'ans-A', label: '川の流速', unit: 'km/h' }],
+    };
+  },
+
+  checkAnswer() {
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    const cur = this._current;
+    if (cur.nB !== undefined) {
+      const b = parseInt(document.getElementById('ans-B').value, 10);
+      return { correct: a === cur.nA && b === cur.nB, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}、${cur.nameB} ${cur.nB}${cur.unitB}` };
+    }
+    return { correct: a === cur.nA, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}` };
+  },
+
+  explain() {
+    const c = this._current;
+    if (c && c._steps) return { type: 'steps', title: c._title || 'かいせつ', steps: c._steps };
+    return { type: 'steps', title: 'かいせつ', steps: [] };
+  },
+});
+
+// --- 過不足算 ---
+registerModule({
+  id: 'kafusoku',
+  name: '過不足算',
+  icon: '⚖️',
+  unlocked: true,
+  _level: 'basic',
+  _current: null,
+
+  generate() {
+    if (this._level === 'juken')  return this._genJuken();
+    if (this._level === 'applied') return this._genApplied();
+    return this._genBasic();
+  },
+
+  _genBasic() {
+    const tpls = [this._tplOverUnder, this._tplBothSurplus];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genApplied() {
+    const tpls = [this._tplLastPerson, this._tplShortage];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genJuken() {
+    const tpls = [this._jTplExtra, this._jTplGroups];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  // a個→余り r1 / b個→不足 r2
+  _tplOverUnder() {
+    let a, b, r1, r2, N, M;
+    do {
+      a  = randInt(3, 7);
+      b  = a + randInt(2, 4);
+      r1 = randInt(2, 10);
+      r2 = randInt(2, 10);
+      N  = (r1 + r2) / (b - a);
+      M  = a * N + r1;
+    } while (!Number.isInteger(N) || N < 3 || M > 100);
+    this._current = {
+      nA: N, nB: M,
+      nameA: '子供の人数', unitA: '人',
+      nameB: 'お菓子の数', unitB: '個',
+      _title: 'かいせつ（過不足算）',
+      _steps: [
+        `1人あたりの差：${b} − ${a} ＝ <em>${b - a}個</em>`,
+        `合計の差：${r1} ＋ ${r2} ＝ <em>${r1 + r2}個</em>`,
+        `人数：${r1 + r2} ÷ ${b - a} ＝ <em>${N}人</em>`,
+        `お菓子の数：${a} × ${N} ＋ ${r1} ＝ <em>${M}個</em>`,
+      ],
+    };
+    return {
+      text: `子供にお菓子を配る。<br><span class="num">${a}</span>個ずつ配ると <span class="num">${r1}</span>個 余り、<br><span class="num">${b}</span>個ずつ配ると <span class="num">${r2}</span>個 足りない。<br>子供の人数とお菓子の数は？`,
+      inputs: [
+        { id: 'ans-A', label: '子供の人数', unit: '人' },
+        { id: 'ans-B', label: 'お菓子の数', unit: '個' },
+      ],
+    };
+  },
+
+  // a個→余り r1 / b個→余り r2（余り同士）
+  _tplBothSurplus() {
+    let a, b, r1, r2, N, M;
+    do {
+      a  = randInt(3, 6);
+      b  = a + randInt(2, 4);
+      N  = randInt(4, 12);
+      r2 = randInt(1, 5);
+      r1 = r2 + (b - a) * N;  // r1 must be > r2
+      M  = a * N + r1;
+    } while (r1 > 20 || M > 100);
+    this._current = {
+      nA: N, nB: M,
+      nameA: '子供の人数', unitA: '人',
+      nameB: 'お菓子の数', unitB: '個',
+      _title: 'かいせつ（過不足算・余りが2つ）',
+      _steps: [
+        `1人あたりの差：${b} − ${a} ＝ <em>${b - a}個</em>`,
+        `余りの差：${r1} − ${r2} ＝ <em>${r1 - r2}個</em>`,
+        `人数：${r1 - r2} ÷ ${b - a} ＝ <em>${N}人</em>`,
+        `お菓子の数：${a} × ${N} ＋ ${r1} ＝ <em>${M}個</em>`,
+      ],
+    };
+    return {
+      text: `子供にお菓子を配る。<br><span class="num">${a}</span>個ずつ配ると <span class="num">${r1}</span>個 余り、<br><span class="num">${b}</span>個ずつ配ると <span class="num">${r2}</span>個 余る。<br>子供の人数とお菓子の数は？`,
+      inputs: [
+        { id: 'ans-A', label: '子供の人数', unit: '人' },
+        { id: 'ans-B', label: 'お菓子の数', unit: '個' },
+      ],
+    };
+  },
+
+  // a個→余り r1 / b個→最後の1人だけ r2個
+  _tplLastPerson() {
+    let a, b, r1, r2, N, M;
+    do {
+      a  = randInt(3, 7);
+      b  = a + randInt(2, 4);
+      r2 = randInt(1, b - 1);
+      r1 = randInt(1, 10);
+      N  = (b + r1 - r2) / (b - a);
+      M  = a * N + r1;
+    } while (!Number.isInteger(N) || N < 3 || M > 100 || r2 >= b);
+    this._current = {
+      nA: N, nB: M,
+      nameA: '子供の人数', unitA: '人',
+      nameB: 'お菓子の数', unitB: '個',
+      _title: 'かいせつ（過不足算・最後の1人）',
+      _steps: [
+        `"最後の1人だけ ${r2}個" ＝ ${b - r2}個 足りない`,
+        `合計の差：${r1} ＋ ${b - r2} ＝ <em>${r1 + b - r2}個</em>`,
+        `人数：${r1 + b - r2} ÷ ${b - a} ＝ <em>${N}人</em>`,
+        `お菓子の数：${a} × ${N} ＋ ${r1} ＝ <em>${M}個</em>`,
+      ],
+    };
+    return {
+      text: `子供にお菓子を配る。<br><span class="num">${a}</span>個ずつ配ると <span class="num">${r1}</span>個 余り、<br><span class="num">${b}</span>個ずつ配ると<br>最後の1人だけ <span class="num">${r2}</span>個 もらえる。<br>子供の人数とお菓子の数は？`,
+      inputs: [
+        { id: 'ans-A', label: '子供の人数', unit: '人' },
+        { id: 'ans-B', label: 'お菓子の数', unit: '個' },
+      ],
+    };
+  },
+
+  // a個ずつ配ると r1個余り、b個ずつ配るとD個不足
+  _tplShortage() {
+    let a, b, r1, r2, N, M;
+    do {
+      a  = randInt(3, 7);
+      b  = a + randInt(2, 4);
+      r1 = randInt(2, 10);
+      r2 = randInt(2, 10);
+      N  = (r1 + r2) / (b - a);
+      M  = a * N + r1;
+    } while (!Number.isInteger(N) || N < 3 || M > 100);
+    this._current = {
+      nA: N, nB: M,
+      nameA: '生徒の人数', unitA: '人',
+      nameB: 'ノートの冊数', unitB: '冊',
+      _title: 'かいせつ（過不足算・不足型）',
+      _steps: [
+        `1人あたりの差：${b} − ${a} ＝ <em>${b - a}冊</em>`,
+        `余りと不足の合計：${r1} ＋ ${r2} ＝ <em>${r1 + r2}冊</em>`,
+        `人数：${r1 + r2} ÷ ${b - a} ＝ <em>${N}人</em>`,
+        `ノートの冊数：${a} × ${N} ＋ ${r1} ＝ <em>${M}冊</em>`,
+      ],
+    };
+    return {
+      text: `生徒にノートを配る。<br><span class="num">${a}</span>冊ずつ配ると <span class="num">${r1}</span>冊 余り、<br><span class="num">${b}</span>冊ずつ配ると <span class="num">${r2}</span>冊 足りない。<br>生徒の人数とノートの冊数は？`,
+      inputs: [
+        { id: 'ans-A', label: '生徒の人数', unit: '人' },
+        { id: 'ans-B', label: 'ノートの冊数', unit: '冊' },
+      ],
+    };
+  },
+
+  // a個→余り r1 / b個→不足 r2、さらにc個ずつ配ると何個余る？
+  _jTplExtra() {
+    let a, b, r1, r2, c, N, M, rem;
+    do {
+      a  = randInt(3, 6);
+      b  = a + randInt(3, 5);
+      r1 = randInt(2, 10);
+      r2 = randInt(2, 10);
+      N  = (r1 + r2) / (b - a);
+      M  = a * N + r1;
+      c  = a + randInt(1, b - a - 1);
+      rem = M - c * N;
+    } while (!Number.isInteger(N) || N < 4 || M > 100 || rem <= 0 || c <= a || c >= b);
+    this._current = {
+      nA: rem, nameA: `${c}個ずつ配ったときの余り`, unitA: '個',
+      _title: 'かいせつ（過不足算・発展）',
+      _steps: [
+        `人数：(${r1} ＋ ${r2}) ÷ (${b} − ${a}) ＝ <em>${N}人</em>`,
+        `お菓子の数：${a} × ${N} ＋ ${r1} ＝ <em>${M}個</em>`,
+        `${c}個ずつ配ると：${M} − ${c} × ${N} ＝ <em>${rem}個 余る</em>`,
+      ],
+    };
+    return {
+      text: `子供にお菓子を配る。<br><span class="num">${a}</span>個ずつ配ると <span class="num">${r1}</span>個 余り、<br><span class="num">${b}</span>個ずつ配ると <span class="num">${r2}</span>個 足りない。<br><span class="num">${c}</span>個ずつ配ると何個余る？`,
+      inputs: [{ id: 'ans-A', label: '余る個数', unit: '個' }],
+    };
+  },
+
+  // グループ数を増やすと過不足が変わる（2答）
+  _jTplGroups() {
+    let groups, k, a, b, r1, r2, M, totalGroups;
+    do {
+      a       = randInt(3, 6);
+      b       = a + randInt(2, 4);
+      groups  = randInt(4, 10);
+      k       = randInt(1, 3);
+      r1      = randInt(1, a - 1);
+      M       = a * groups + r1;
+      r2      = (groups + k) * b - M;
+    } while (r2 <= 0 || r2 >= b || M > 100);
+    totalGroups = groups + k;
+    this._current = {
+      nA: groups, nB: M,
+      nameA: 'グループの数', unitA: 'グループ',
+      nameB: 'お菓子の数', unitB: '個',
+      _title: 'かいせつ（過不足算・グループ増加）',
+      _steps: [
+        `${a}個ずつ ${groups}グループ → ${M}個（余り${r1}個）`,
+        `${b}個ずつ ${totalGroups}グループ → ${totalGroups * b}個必要 → ${r2}個不足`,
+        `1グループあたりの差 × グループ増加：${b - a} × □ ＋ ... を整理`,
+        `グループの数：<em>${groups}グループ</em>`,
+        `お菓子の数：${a} × ${groups} ＋ ${r1} ＝ <em>${M}個</em>`,
+      ],
+    };
+    return {
+      text: `子供のグループにお菓子を配る。<br><span class="num">${a}</span>個ずつ配ると <span class="num">${r1}</span>個 余り、<br>グループを <span class="num">${k}</span>つ増やして<br><span class="num">${b}</span>個ずつ配ると <span class="num">${r2}</span>個 足りない。<br>グループの数とお菓子の数は？`,
+      inputs: [
+        { id: 'ans-A', label: 'グループの数', unit: 'グループ' },
+        { id: 'ans-B', label: 'お菓子の数', unit: '個' },
+      ],
+    };
+  },
+
+  checkAnswer() {
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    const cur = this._current;
+    if (cur.nB !== undefined) {
+      const b = parseInt(document.getElementById('ans-B').value, 10);
+      return { correct: a === cur.nA && b === cur.nB, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}、${cur.nameB} ${cur.nB}${cur.unitB}` };
+    }
+    return { correct: a === cur.nA, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}` };
+  },
+
+  explain() {
+    const c = this._current;
+    if (c && c._steps) return { type: 'steps', title: c._title || 'かいせつ', steps: c._steps };
+    return { type: 'steps', title: 'かいせつ', steps: [] };
+  },
+});
+
+// --- 差集め算 ---
+registerModule({
+  id: 'sasume',
+  name: '差集め算',
+  icon: '📐',
+  unlocked: true,
+  _level: 'basic',
+  _current: null,
+
+  generate() {
+    if (this._level === 'juken')  return this._genJuken();
+    if (this._level === 'applied') return this._genApplied();
+    return this._genBasic();
+  },
+
+  _genBasic() {
+    const tpls = [this._tplPriceDiff, this._tplTapeGap];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genApplied() {
+    const tpls = [this._tplCutDiff, this._tplTwoGroup];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  _genJuken() {
+    const tpls = [this._jTplCompound, this._jTplRatioDiff];
+    return tpls[randInt(0, tpls.length - 1)].call(this);
+  },
+
+  // 単価差 → 合計差から個数
+  _tplPriceDiff() {
+    const a    = randInt(3, 10) * 10;
+    const diff = randInt(1, 5) * 10;
+    const b    = a + diff;
+    const N    = randInt(3, 12);
+    const D    = diff * N;
+    const more = randInt(0, 1) === 1;
+    this._current = {
+      nA: N, nameA: '個数', unitA: '個',
+      _title: 'かいせつ（差集め算・単価差）',
+      _steps: [
+        `1個あたりの差：${b} − ${a} ＝ <em>${diff}円</em>`,
+        `合計の差：${D}円 ÷ ${diff}円 ＝ <em>${N}個</em>`,
+      ],
+    };
+    const actualPrice = more ? b : a;
+    const estimPrice  = more ? a : b;
+    const moreOrLess  = more ? '多く' : '少なく';
+    return {
+      text: `N個の品を買う予定。<br>1個 <span class="num">${estimPrice}</span>円 と見積もって用意したが、<br>実際は1個 <span class="num">${actualPrice}</span>円 で<br>合計 <span class="num">${D}</span>円 ${moreOrLess}かかった。<br>何個買う？`,
+      inputs: [{ id: 'ans-A', label: '個数', unit: '個' }],
+    };
+  },
+
+  // 間隔変更 → 全体長の差から枚数
+  _tplTapeGap() {
+    const a = randInt(3, 8);
+    const b = a + randInt(1, 4);
+    const N = randInt(4, 12);
+    const D = (b - a) * (N - 1);
+    this._current = {
+      nA: N, nameA: '写真の枚数', unitA: '枚',
+      _title: 'かいせつ（差集め算・間隔差）',
+      _steps: [
+        `枚数を N 枚とすると間の数 ＝ N − 1`,
+        `1つの間の差：${b} − ${a} ＝ <em>${b - a}cm</em>`,
+        `全体の差：(N − 1) × ${b - a} ＝ ${D}`,
+        `N − 1 ＝ ${D} ÷ ${b - a} ＝ <em>${N - 1}</em>`,
+        `N ＝ ${N - 1} ＋ 1 ＝ <em>${N}枚</em>`,
+      ],
+    };
+    return {
+      text: `写真を一列に等間隔で並べる。<br><span class="num">${a}</span>cm 間隔の予定を <span class="num">${b}</span>cm 間隔にしたら<br>全体が <span class="num">${D}</span>cm 長くなった。<br>写真は何枚？`,
+      inputs: [{ id: 'ans-A', label: '写真の枚数', unit: '枚' }],
+    };
+  },
+
+  // テープを何本かに切る → 1本あたりの長さ差から本数
+  _tplCutDiff() {
+    const a = randInt(20, 50);
+    const b = a + randInt(5, 20);
+    const N = randInt(3, 10);
+    const D = (b - a) * N;
+    this._current = {
+      nA: N, nameA: '本数', unitA: '本',
+      _title: 'かいせつ（差集め算・テープの切り分け）',
+      _steps: [
+        `1本あたりの差：${b} − ${a} ＝ <em>${b - a}cm</em>`,
+        `本数：${D} ÷ ${b - a} ＝ <em>${N}本</em>`,
+      ],
+    };
+    return {
+      text: `テープを何本かに切り分ける。<br>1本 <span class="num">${a}</span>cm のつもりが <span class="num">${b}</span>cm にしたら<br>合計が <span class="num">${D}</span>cm 多くなった。<br>何本に切る？`,
+      inputs: [{ id: 'ans-A', label: '本数', unit: '本' }],
+    };
+  },
+
+  // 2グループの差集め → 人数と合計（2答）
+  _tplTwoGroup() {
+    let aRate, bRate, K, M, N, total;
+    do {
+      aRate = randInt(3, 8);
+      bRate = aRate + randInt(2, 5);
+      K     = randInt(2, 6);  // 余分に配る人数分の差
+      N     = randInt(4, 10);
+      M     = aRate * N + bRate * K;
+      total = N + K;
+    } while (M > 100 || total > 20);
+    this._current = {
+      nA: N, nB: M,
+      nameA: 'A組の人数', unitA: '人',
+      nameB: '配ったおはじきの合計', unitB: '個',
+      _title: 'かいせつ（差集め算・2グループ）',
+      _steps: [
+        `全員に ${aRate}個ずつ配ったとしたら：${aRate} × ${total} ＝ <em>${aRate * total}個</em>`,
+        `実際の差：${M} − ${aRate * total} ＝ <em>${M - aRate * total}個 多い</em>`,
+        `1人を A組→B組 に変えると：${bRate - aRate}個 増える`,
+        `B組の人数：${M - aRate * total} ÷ ${bRate - aRate} ＝ <em>${K}人</em>`,
+        `A組の人数：${total} − ${K} ＝ <em>${N}人</em>`,
+      ],
+    };
+    return {
+      text: `A組とB組に合わせて <span class="num">${total}</span>人。<br>A組には <span class="num">${aRate}</span>個ずつ、<br>B組には <span class="num">${bRate}</span>個ずつ おはじきを配ったら<br>合計 <span class="num">${M}</span>個 だった。<br>A組の人数と合計個数は？`,
+      inputs: [
+        { id: 'ans-A', label: 'A組の人数', unit: '人' },
+        { id: 'ans-B', label: 'おはじきの合計', unit: '個' },
+      ],
+    };
+  },
+
+  // 差集め算 + 過不足算 融合（2答）
+  _jTplCompound() {
+    let a, b, N, r1, r2, M;
+    do {
+      a  = randInt(4, 8);
+      b  = a + randInt(2, 4);
+      r1 = randInt(2, 8);
+      r2 = randInt(2, 8);
+      N  = (r1 + r2) / (b - a);
+      M  = a * N + r1;
+    } while (!Number.isInteger(N) || N < 4 || M > 100);
+    const diff = b - a;
+    this._current = {
+      nA: N, nB: M,
+      nameA: '子供の人数', unitA: '人',
+      nameB: 'お菓子の数', unitB: '個',
+      _title: 'かいせつ（差集め算・発展）',
+      _steps: [
+        `1人あたり ${a}個から ${b}個に増やすと差は ${diff}個/人`,
+        `差が積み重なった合計：${r1} ＋ ${r2} ＝ <em>${r1 + r2}個</em>`,
+        `人数：${r1 + r2} ÷ ${diff} ＝ <em>${N}人</em>`,
+        `お菓子の数：${a} × ${N} ＋ ${r1} ＝ <em>${M}個</em>`,
+      ],
+    };
+    return {
+      text: `子供にお菓子を配る。<br>1人に <span class="num">${a}</span>個ずつ配ると <span class="num">${r1}</span>個 余り、<br>1人に <span class="num">${b}</span>個ずつ配ると <span class="num">${r2}</span>個 足りない。<br>子供の人数とお菓子の数は？`,
+      inputs: [
+        { id: 'ans-A', label: '子供の人数', unit: '人' },
+        { id: 'ans-B', label: 'お菓子の数', unit: '個' },
+      ],
+    };
+  },
+
+  // 単価比を使う差集め算（2答）
+  _jTplRatioDiff() {
+    let pA, pB, nA, nB, S, diff;
+    do {
+      pA = randInt(3, 8) * 10;
+      pB = pA + randInt(2, 6) * 10;
+      nA = randInt(3, 8);
+      nB = randInt(3, 8);
+      S  = pA * nA + pB * nB;
+      diff = pB - pA;
+    } while (S > 500 || diff < 10);
+    // Suppose all bought at pA → hypo = pA*(nA+nB), actual diff = pB*nB - pA*nB = diff*nB
+    const total = nA + nB;
+    const hypo  = pA * total;
+    const excess = S - hypo;
+    this._current = {
+      nA, nB,
+      nameA: 'A商品の個数', unitA: '個',
+      nameB: 'B商品の個数', unitB: '個',
+      _title: 'かいせつ（差集め算・単価比）',
+      _steps: [
+        `全部 ${pA}円と仮定：${pA} × ${total} ＝ <em>${hypo}円</em>`,
+        `実際との差：${S} − ${hypo} ＝ <em>${excess}円 多い</em>`,
+        `1個をA→Bに替えると：${pB} − ${pA} ＝ ${diff}円 増える`,
+        `B商品の数：${excess} ÷ ${diff} ＝ <em>${nB}個</em>`,
+        `A商品の数：${total} − ${nB} ＝ <em>${nA}個</em>`,
+      ],
+    };
+    return {
+      text: `A商品（<span class="num">${pA}</span>円）と B商品（<span class="num">${pB}</span>円）を<br>合わせて <span class="num">${total}</span>個 買ったら <span class="num">${S}</span>円 だった。<br>A商品とB商品はそれぞれ何個？`,
+      inputs: [
+        { id: 'ans-A', label: 'A商品の個数', unit: '個' },
+        { id: 'ans-B', label: 'B商品の個数', unit: '個' },
+      ],
+    };
+  },
+
+  checkAnswer() {
+    const a = parseInt(document.getElementById('ans-A').value, 10);
+    const cur = this._current;
+    if (cur.nB !== undefined) {
+      const b = parseInt(document.getElementById('ans-B').value, 10);
+      return { correct: a === cur.nA && b === cur.nB, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}、${cur.nameB} ${cur.nB}${cur.unitB}` };
+    }
+    return { correct: a === cur.nA, explanation: `${cur.nameA} ${cur.nA}${cur.unitA}` };
+  },
+
+  explain() {
+    const c = this._current;
+    if (c && c._steps) return { type: 'steps', title: c._title || 'かいせつ', steps: c._steps };
+    return { type: 'steps', title: 'かいせつ', steps: [] };
+  },
+});
+
+// ============================================================
+//  REF_CONTENT entries for new modules
+// ============================================================
+REF_CONTENT.tabibito = {
+  title: '旅人算',
+  concept: `2人（または複数）が <b>向かい合い</b> または <b>同じ方向</b> に進むとき、<br>出会う時間や追いつく時間を求める算数です。`,
+  method: `<b>向かい合い</b>：出会うまでの時間 ＝ 距離 ÷ (速さの和)<br><b>同じ方向</b>：追いつくまでの時間 ＝ 距離の差 ÷ (速さの差)`,
+  exQ: `AとBが <b>300m</b> 離れて向かい合い歩く。<br>Aは分速 <b>40m</b>、Bは分速 <b>60m</b>。<br>何分後に出会う？`,
+  example: { type: 'steps', title: 'かいせつ', steps: ['1分間に近づく距離：40 ＋ 60 ＝ <em>100m</em>', '出会うまでの時間：300 ÷ 100 ＝ <em>3分</em>'] },
+};
+
+REF_CONTENT.ueki = {
+  title: '植木算',
+  concept: `道や池の周りに等間隔で木を植えるとき、<br><b>木の数</b> と <b>間の数</b> の関係を考える算数です。`,
+  method: `<b>両端あり（直線）</b>：木の数 ＝ 間の数 ＋ 1<br><b>輪（池の周り）</b>：木の数 ＝ 間の数<br><b>片端あり</b>：木の数 ＝ 間の数`,
+  exQ: `<b>50m</b> の道に <b>10m</b> おきに木を植える（両端あり）。<br>何本必要？`,
+  example: { type: 'steps', title: 'かいせつ', steps: ['間の数：50 ÷ 10 ＝ <em>5</em>', '木の数：5 ＋ 1 ＝ <em>6本</em>'] },
+};
+
+REF_CONTENT.ryusui = {
+  title: '流水算',
+  concept: `川などの <b>流れのある水</b> の上を船が進むとき、<br>上りと下りで速さが変わることを利用した算数です。`,
+  method: `<b>上りの速さ</b> ＝ 静水時の速さ − 流速<br><b>下りの速さ</b> ＝ 静水時の速さ ＋ 流速<br><b>静水時の速さ</b> ＝ (上り＋下り) ÷ 2<br><b>流速</b> ＝ (下り−上り) ÷ 2`,
+  exQ: `静水時速 <b>10km/h</b>、流速 <b>2km/h</b>。<br><b>24km</b> を上り/下りにかかる時間は？`,
+  example: { type: 'steps', title: 'かいせつ', steps: ['上りの速さ：10 − 2 ＝ <em>8km/h</em>', '下りの速さ：10 ＋ 2 ＝ <em>12km/h</em>', '上り：24 ÷ 8 ＝ <em>3時間</em>、下り：24 ÷ 12 ＝ <em>2時間</em>'] },
+};
+
+REF_CONTENT.kafusoku = {
+  title: '過不足算',
+  concept: `ものを配るとき、<b>余る場合</b> と <b>足りない場合</b> の差を使って、<br>人数や個数を求める算数です。`,
+  method: `<b>人数</b> ＝ (余り ＋ 不足) ÷ (1人あたりの差)<br><b>個数</b> ＝ 少ない方の数 × 人数 ＋ 余り`,
+  exQ: `<b>4個</b>ずつ配ると <b>3個</b> 余り、<b>6個</b>ずつ配ると <b>5個</b> 足りない。<br>人数と個数は？`,
+  example: { type: 'steps', title: 'かいせつ', steps: ['人数：(3 ＋ 5) ÷ (6 − 4) ＝ <em>4人</em>', '個数：4 × 4 ＋ 3 ＝ <em>19個</em>'] },
+};
+
+REF_CONTENT.sasume = {
+  title: '差集め算',
+  concept: `1つあたりの差が <b>積み重なって</b> 全体の差になることを利用し、<br>個数や人数を求める算数です。`,
+  method: `<b>個数</b> ＝ 全体の差 ÷ 1つあたりの差<br>（間隔の問題は「間の数」に注意）`,
+  exQ: `1個 <b>80円</b> の予定が実際は <b>90円</b> で、<br>合計 <b>60円</b> 多かった。<br>何個買う？`,
+  example: { type: 'steps', title: 'かいせつ', steps: ['1個あたりの差：90 − 80 ＝ <em>10円</em>', '個数：60 ÷ 10 ＝ <em>6個</em>'] },
+};
+
 
 // ============================================================
 //  SECTIONS
