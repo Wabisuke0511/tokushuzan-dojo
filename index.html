@@ -1242,90 +1242,101 @@ registerModule({
   },
 
   _genJuken() {
-    const tpls = [this._jTpl3Person, this._jTplTransfer, this._jTplRatio, this._jTplFuture];
+    const tpls = [this._jTplChain, this._jTplDistribute, this._jTplKafusoku, this._jTplBaibai];
     return tpls[randInt(0, tpls.length - 1)].call(this);
   },
 
-  _jTpl3Person() {
-    // A=B+d1, B=C+d2, A+B+C=S → C=(S-d1-2*d2)/3
-    let d1, d2, S, C;
+  // 【中学受験】倍数差の連鎖（A=kB-r, B=C+d, 合計S）
+  _jTplChain() {
+    let k, r, d, C, B, A, S;
     do {
-      d1 = randInt(1,5)*10; d2 = randInt(1,5)*10;
-      S  = randInt(6,15)*30;
-      C  = (S - d1 - 2*d2) / 3;
-    } while (!Number.isInteger(C) || C <= 0);
-    const B = C + d2, A = B + d1;
-    this._current = { nA: A, nB: B, nC: C, nameA: 'A', nameB: 'B', nameC: 'C', unitA: '点', unitB: '点', unitC: '点' };
+      k = randInt(2, 3);
+      d = randInt(1, 5) * 200;
+      r = randInt(1, 4) * 200;
+      C = randInt(2, 8) * 200;
+      B = C + d;
+      A = k * B - r;
+      S = A + B + C;
+    } while (A <= 0 || S > 20000 || S % 200 !== 0);
+    const pairs = [['A','B','C','円'], ['太郎','次郎','三郎','円'], ['兄','弟','妹','円']];
+    const [nA, nB, nC, unit] = pairs[randInt(0, pairs.length - 1)];
+    this._current = { nA: A, nB: B, nC: C, nameA: nA, nameB: nB, nameC: nC, unitA: unit, unitB: unit, unitC: unit };
     return {
-      text: `A・B・C 3人のテストの合計は <span class="num">${S}</span>点。<br>AはBより <span class="num">${d1}</span>点 高く、<br>BはCより <span class="num">${d2}</span>点 高い。<br>それぞれ 何点？`,
+      text: `${nA}・${nB}・${nC} 3人の所持金の合計は <span class="num">${S}</span>${unit}。<br>${nA}は${nB}の <span class="num">${k}</span>倍より <span class="num">${r}</span>${unit} 少なく、<br>${nB}は${nC}より <span class="num">${d}</span>${unit} 多い。<br>それぞれ 何${unit}？`,
       inputs: [
-        { id: 'ans-A', label: 'A の点数', unit: '点' },
-        { id: 'ans-B', label: 'B の点数', unit: '点' },
-        { id: 'ans-C', label: 'C の点数', unit: '点' },
+        { id: 'ans-A', label: `${nA}の所持金`, unit },
+        { id: 'ans-B', label: `${nB}の所持金`, unit },
+        { id: 'ans-C', label: `${nC}の所持金`, unit },
       ],
     };
   },
 
-  _jTplTransfer() {
-    // AがBにx枚渡すとBはAのk倍 → big=A, small=B, transfer=x, ratio=k
-    let big, small, x, k;
+  // 【中学受験】分配＋比の和差（CはAとBの合計の1/n）
+  _jTplDistribute() {
+    let A, B, C, S, d, n, m;
     do {
-      big   = randInt(30, 80);
-      small = randInt(10, big - 10);
-      x     = randInt(2, Math.floor((big - small) / 3));
-      k     = 2;
-    } while ((small + x) !== k * (big - x));
-    // Ensure k=2: small+x = 2(big-x) → small = 2*big - 3x
-    // Regenerate properly
-    x   = randInt(4, 20);
-    big = randInt(3*x + 10, 3*x + 40);
-    small = 2*big - 3*x;
-    if (small <= 0 || small >= big) { return this._jTplRatio.call(this); }
-    const total = big + small;
-    this._current = { nA: big, nB: small, nameA: 'A', nameB: 'B', unitA: '枚', unitB: '枚', big, small, sum: total, diff: big - small };
+      n = randInt(2, 4);
+      m = randInt(3, 12) * 200;
+      d = randInt(1, 5) * 200;
+      if ((m * n + d) % 2 !== 0) continue;
+      A = (m * n + d) / 2;
+      B = A - d;
+      C = m;
+      S = A + B + C;
+    } while (B <= 0 || C <= 0 || S > 40000 || S % 200 !== 0);
+    this._current = { nA: A, nB: B, nC: C, nameA: '長男', nameB: '次男', nameC: '三男', unitA: '円', unitB: '円', unitC: '円' };
     return {
-      text: `AとBはカードを合わせて <span class="num">${total}</span>枚 持っている。<br>AがBに <span class="num">${x}</span>枚 わたすと<br>BはAの2倍になる。<br>はじめ それぞれ 何枚？`,
+      text: `<span class="num">${S}</span>円を長男・次男・三男の3人で分ける。<br>長男は次男より <span class="num">${d}</span>円 多く、<br>三男は長男と次男の合計の <span class="num">1/${n}</span>。<br>それぞれ 何円？`,
       inputs: [
-        { id: 'ans-A', label: 'A の枚数', unit: '枚' },
-        { id: 'ans-B', label: 'B の枚数', unit: '枚' },
+        { id: 'ans-A', label: '長男の金額', unit: '円' },
+        { id: 'ans-B', label: '次男の金額', unit: '円' },
+        { id: 'ans-C', label: '三男の金額', unit: '円' },
       ],
     };
   },
 
-  _jTplRatio() {
-    // A = k*B + r, A+B = S
-    const k = randInt(2, 4);
-    const r = randInt(1, 6) * 10;
-    const B = randInt(10, 30);
-    const A = k * B + r;
-    const S = A + B;
-    this._current = { nA: A, nB: B, nameA: '兄', nameB: '弟', unitA: '円', unitB: '円', big: A, small: B, sum: S, diff: A - B };
+  // 【中学受験】過不足算（最後の1人が少ない型）
+  // a個ずつ→r1個余り、b個ずつ→最後の1人だけr2個（他はb個）→ N=(b+r1-r2)/(b-a)
+  _jTplKafusoku() {
+    let a, b, r1, r2, N, M;
+    do {
+      a  = randInt(3, 7);
+      b  = a + randInt(2, 4);
+      r1 = randInt(2, 10);
+      r2 = randInt(1, b - 1);
+      if ((b + r1 - r2) % (b - a) !== 0) continue;
+      N = (b + r1 - r2) / (b - a);
+      M = a * N + r1;
+    } while (N < 5 || N > 30 || M > 250);
+    this._current = { nA: N, nB: M, nameA: '子供の人数', nameB: 'お菓子の数', unitA: '人', unitB: '個' };
     return {
-      text: `兄と弟の所持金の合計は <span class="num">${S}</span>円。<br>兄は弟の <span class="num">${k}</span>倍より <span class="num">${r}</span>円 多い。<br>それぞれ 何円？`,
+      text: `子供にお菓子を配る。<br>1人に <span class="num">${a}</span>個ずつ配ると <span class="num">${r1}</span>個 余る。<br>1人に <span class="num">${b}</span>個ずつ配ると<br>最後の1人だけ <span class="num">${r2}</span>個 になる。<br>子供の人数とお菓子の数は？`,
       inputs: [
-        { id: 'ans-A', label: '兄の所持金', unit: '円' },
-        { id: 'ans-B', label: '弟の所持金', unit: '円' },
+        { id: 'ans-A', label: '子供の人数', unit: '人' },
+        { id: 'ans-B', label: 'お菓子の数', unit: '個' },
       ],
     };
   },
 
-  _jTplFuture() {
-    // 現在の和・差から求め、y年後の年齢も問う
-    let sum, diff, big, small, y;
+  // 【中学受験】売買和差（定価×割引×合計金額）
+  // A品定価vA、B品定価vBを2割引で購入。合計N個、合計S円。
+  _jTplBaibai() {
+    let vA, vB, nA, nB, N, S;
     do {
-      diff  = randInt(2, 6) * 4;
-      small = randInt(8, 20);
-      big   = small + diff;
-      sum   = big + small;
-      y     = randInt(3, 10);
-    } while (sum % 2 !== 0);
-    const futureA = big + y, futureB = small + y;
-    this._current = { nA: big, nB: small, nameA: '姉', nameB: '妹', unitA: '歳', unitB: '歳', big, small, sum, diff, y, futureA, futureB };
+      vA = randInt(4, 10) * 100;
+      vB = randInt(3, 8) * 100;
+      if (vA === vB) continue;
+      nA = randInt(3, 10); nB = randInt(3, 10);
+      N = nA + nB;
+      S = vA * nA + vB * 0.8 * nB;
+    } while (!Number.isInteger(S) || S > 20000 || N > 20);
+    this._current = { N, nA, nB, valA: vA, valB: vB, S,
+      nameA: 'A品', unitA: '個', nameB: 'B品', unitB: '個' };
     return {
-      text: `姉と妹の年齢の和は <span class="num">${sum}</span>歳、差は <span class="num">${diff}</span>歳。<br><span class="num">${y}</span>年後、<br>姉は何歳で、妹は何歳？`,
+      text: `定価 <span class="num">${vA}</span>円のA品と<br>定価 <span class="num">${vB}</span>円のB品を合わせて <span class="num">${N}</span>個 買った。<br>B品を2割引きで買ったら合計 <span class="num">${S}</span>円。<br>A品とB品は それぞれ 何個？`,
       inputs: [
-        { id: 'ans-A', label: `${y}年後の姉`, unit: '歳' },
-        { id: 'ans-B', label: `${y}年後の妹`, unit: '歳' },
+        { id: 'ans-A', label: 'A品の個数', unit: '個' },
+        { id: 'ans-B', label: 'B品の個数', unit: '個' },
       ],
     };
   },
@@ -1526,83 +1537,99 @@ registerModule({
   },
 
   _genJuken() {
-    const tpls = [this._jTplSwap, this._jTpl3Type, this._jTplOverlap, this._jTplChanged];
+    const tpls = [this._jTplSpeed, this._jTpl3Diff, this._jTplKaten, this._jTplAddChange];
     return tpls[randInt(0, tpls.length - 1)].call(this);
   },
 
-  _jTplSwap() {
-    // 個数を入れ替えると代金がD円変わる
-    const valA = randInt(3,8)*10, valB = randInt(valA/10+2, 12)*10;
-    const nA = randInt(3,10), nB = randInt(3,10);
-    const N = nA + nB;
-    const P = nA*valA + nB*valB;
-    const Q = nB*valA + nA*valB;
-    const diff = Math.abs(P - Q);
-    this._current = { N, nA, nB, valA, valB, S: P,
-      nameA: 'A商品', unitA: '個', nameB: 'B商品', unitB: '個', unitS: '円' };
-    return {
-      text: `<span class="num">${valA}</span>円のAと <span class="num">${valB}</span>円のBを<br>合わせて <span class="num">${N}</span>個 買うと <span class="num">${P}</span>円。<br>AとBの個数を入れ替えると <span class="num">${Q}</span>円になる。<br>それぞれ 何個？`,
-      inputs: [
-        { id: 'ans-A', label: 'A商品', unit: '個' },
-        { id: 'ans-B', label: 'B商品', unit: '個' },
-      ],
-    };
-  },
-
-  _jTpl3Type() {
-    // 3種類（足の数）：自転車2輪、三輪車3輪、自動車4輪
-    let nA, nB, nC, N, L;
+  // 【中学受験】速さの鶴亀（距離を2分割、時間合計から各距離を求める）
+  _jTplSpeed() {
+    let vW, vR, dW, dR, D, T;
     do {
-      nA = randInt(2, 8); nB = randInt(2, 8); nC = randInt(2, 8);
+      vW = randInt(4, 8) * 10;
+      vR = (vW / 10 + randInt(3, 7)) * 10;
+      dW = randInt(3, 12) * 100;
+      dR = randInt(2, 10) * 100;
+      D  = dW + dR;
+      T  = dW / vW + dR / vR;
+    } while (!Number.isInteger(T) || T > 60 || T < 8 || D > 3000);
+    this._current = { N: D, nA: dW, nB: dR,
+      nameA: '歩いた道のり', unitA: 'm', nameB: '走った道のり', unitB: 'm' };
+    return {
+      text: `分速 <span class="num">${vW}</span>m で歩き、<br>分速 <span class="num">${vR}</span>m で走って学校に着いた。<br>学校までの道のりは <span class="num">${D}</span>m、<br>かかった時間は <span class="num">${T}</span>分。<br>歩いた道のりと走った道のりは それぞれ 何m？`,
+      inputs: [
+        { id: 'ans-A', label: '歩いた道のり', unit: 'm' },
+        { id: 'ans-B', label: '走った道のり', unit: 'm' },
+      ],
+    };
+  },
+
+  // 【中学受験】3種類+差の条件（AはBよりd個多い）→ 消去して鶴亀
+  _jTpl3Diff() {
+    let nA, nB, nC, N, S, vA, vB, vC, d;
+    for (let i = 0; i < 300; i++) {
+      vA = randInt(5, 14) * 10;
+      vB = randInt(3, 10) * 10;
+      vC = randInt(8, 18) * 10;
+      if (vA === vB || vA === vC || vB === vC) continue;
+      d  = randInt(1, 5);
+      nB = randInt(2, 8); nC = randInt(2, 8);
+      nA = nB + d;
       N  = nA + nB + nC;
-      L  = 2*nA + 3*nB + 4*nC;
-    } while (N < 8 || N > 20 || L < 15 || L > 60);
-    // Extra clue: nA + nC = N - nB （自転車＋自動車の合計）
-    const nAC = nA + nC;
-    this._current = { nA, nB, nC, N, L, nAC,
-      nameA: '自転車', unitA: '台', nameB: '三輪車', unitB: '台', nameC: '自動車', unitC: '台' };
+      S  = vA * nA + vB * nB + vC * nC;
+      if (N < 8 || N > 25 || S > 5000 || S % 10 !== 0) continue;
+      break;
+    }
+    this._current = { nA, nB, nC, N, S,
+      nameA: 'りんご', unitA: '個', nameB: 'みかん', unitB: '個', nameC: 'かき', unitC: '個' };
     return {
-      text: `自転車(2輪)・三輪車(3輪)・自動車(4輪)が<br>合わせて <span class="num">${N}</span>台、車輪は <span class="num">${L}</span>本。<br>三輪車は <span class="num">${nB}</span>台のとき、<br>自転車と自動車は それぞれ 何台？`,
+      text: `<span class="num">${vA}</span>円のりんご、<span class="num">${vB}</span>円のみかん、<span class="num">${vC}</span>円のかきを<br>合わせて <span class="num">${N}</span>個 買うと <span class="num">${S}</span>円。<br>りんごはみかんより <span class="num">${d}</span>個 多い。<br>りんご・みかん・かき それぞれ 何個？`,
       inputs: [
-        { id: 'ans-A', label: '自転車', unit: '台' },
-        { id: 'ans-B', label: '自動車', unit: '台' },
+        { id: 'ans-A', label: 'りんごの個数', unit: '個' },
+        { id: 'ans-B', label: 'みかんの個数', unit: '個' },
+        { id: 'ans-C', label: 'かきの個数', unit: '個' },
       ],
     };
   },
 
-  _jTplOverlap() {
-    // テスト合否：100点→合格、60点→不合格 の問題
-    const total = randInt(20, 40);
-    const pass  = randInt(Math.ceil(total/2), total - 3);
-    const fail  = total - pass;
-    const S     = 100*pass + 60*fail;
-    this._current = { N: total, nA: pass, nB: fail, valA: 100, valB: 60, S,
-      nameA: '合格者', unitA: '人', nameB: '不合格者', unitB: '人', unitS: '点' };
+  // 【中学受験】仮定算・得点型（正解+p点、不正解-q点）
+  _jTplKaten() {
+    let N, p, q, correct, wrong, T;
+    do {
+      N       = randInt(10, 20);
+      p       = randInt(2, 5);
+      q       = randInt(1, 3);
+      correct = randInt(Math.ceil(N * 0.55), N - 2);
+      wrong   = N - correct;
+      T       = p * correct - q * wrong;
+    } while (T <= 0 || T > N * p - 10);
+    this._current = { N, nA: correct, nB: wrong,
+      nameA: '正解', unitA: '問', nameB: '不正解', unitB: '問' };
     return {
-      text: `<span class="num">${total}</span>人がテストを受けた。<br>合格は100点、不合格は60点として<br>合計点は <span class="num">${S}</span>点。<br>合格者と不合格者は それぞれ 何人？`,
+      text: `<span class="num">${N}</span>問のテスト。<br>正解は1問 <span class="num">${p}</span>点、<br>不正解は1問 <span class="num">${q}</span>点 引かれる。<br>合計 <span class="num">${T}</span>点 だったとき、<br>正解と不正解は それぞれ 何問？`,
       inputs: [
-        { id: 'ans-A', label: '合格者', unit: '人' },
-        { id: 'ans-B', label: '不合格者', unit: '人' },
+        { id: 'ans-A', label: '正解の問数', unit: '問' },
+        { id: 'ans-B', label: '不正解の問数', unit: '問' },
       ],
     };
   },
 
-  _jTplChanged() {
-    // 追加・削除後の条件: nA羽増やし、nB匹減らすと足がD本増えた
-    const N = randInt(8, 20), nA = randInt(2, N-2), nB = N - nA;
-    const valA = 2, valB = 4, S = nA*valA + nB*valB;
-    const addA = randInt(1, 4), removeB = randInt(1, Math.min(4, nB-1));
-    const deltaLegs = addA*valA - removeB*valB;
-    const deltaWord = deltaLegs >= 0
-      ? `<span class="num">${Math.abs(deltaLegs)}</span>本 増える`
-      : `<span class="num">${Math.abs(deltaLegs)}</span>本 減る`;
-    this._current = { N, nA, nB, valA, valB, S,
-      nameA: 'つる', unitA: 'わ', nameB: 'かめ', unitB: 'ひき', unitS: '本' };
+  // 【中学受験】個数変化型（M個追加するとAはBのk倍になる）
+  _jTplAddChange() {
+    let N, M, k, nA, nB;
+    do {
+      k = randInt(2, 4);
+      M = randInt(2, 12);
+      N = randInt(10, 35);
+      if ((k * N - M) % (k + 1) !== 0) continue;
+      nA = (k * N - M) / (k + 1);
+      nB = N - nA;
+    } while (nA <= 0 || nB <= 0 || nA + M > N * k);
+    this._current = { N, nA, nB, nameA: 'A', unitA: '個', nameB: 'B', unitB: '個' };
     return {
-      text: `つるとかめが合わせて <span class="num">${N}</span>匹、<br>足は <span class="num">${S}</span>本。<br>つるを <span class="num">${addA}</span>羽 増やし、かめを <span class="num">${removeB}</span>匹 減らすと<br>足は ${deltaWord}。<br>はじめ それぞれ 何匹？`,
+      text: `AとBが合わせて <span class="num">${N}</span>個 ある。<br>Aを <span class="num">${M}</span>個 追加すると、<br>AはBの <span class="num">${k}</span>倍 になった。<br>はじめ、AとBは それぞれ 何個？`,
       inputs: [
-        { id: 'ans-A', label: 'つるの数', unit: 'わ' },
-        { id: 'ans-B', label: 'かめの数', unit: 'ひき' },
+        { id: 'ans-A', label: 'A の個数', unit: '個' },
+        { id: 'ans-B', label: 'B の個数', unit: '個' },
       ],
     };
   },
