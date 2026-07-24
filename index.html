@@ -1260,7 +1260,18 @@ registerModule({
     } while (A <= 0 || S > 20000 || S % 200 !== 0);
     const pairs = [['A','B','C','円'], ['太郎','次郎','三郎','円'], ['兄','弟','妹','円']];
     const [nA, nB, nC, unit] = pairs[randInt(0, pairs.length - 1)];
-    this._current = { nA: A, nB: B, nC: C, nameA: nA, nameB: nB, nameC: nC, unitA: unit, unitB: unit, unitC: unit };
+    const _kd = k * d;
+    this._current = { nA: A, nB: B, nC: C, nameA: nA, nameB: nB, nameC: nC, unitA: unit, unitB: unit, unitC: unit,
+      _title: 'かいせつ（置き換え法）',
+      _steps: [
+        `${nC}の金額を <em>□</em> とおく`,
+        `${nB} ＝ □ ＋ ${d}${unit}`,
+        `${nA} ＝ ${k} × (□ ＋ ${d}) − ${r} ＝ ${k}□ ＋ ${_kd - r}${unit}`,
+        `合計：□ ＋ (□＋${d}) ＋ (${k}□＋${_kd - r}) ＝ ${S}<br><em>${k+2}</em>□ ＝ ${S} − ${d + _kd - r} ＝ ${S - d - _kd + r}`,
+        `□ ＝ ${S - d - _kd + r} ÷ ${k+2} ＝ <em>${C}${unit}</em>（${nC}）`,
+        `${nB} ＝ ${C}＋${d} ＝ <em>${B}${unit}</em>、${nA} ＝ ${k}×${B}−${r} ＝ <em>${A}${unit}</em>`,
+      ],
+    };
     return {
       text: `${nA}・${nB}・${nC} 3人の所持金の合計は <span class="num">${S}</span>${unit}。<br>${nA}は${nB}の <span class="num">${k}</span>倍より <span class="num">${r}</span>${unit} 少なく、<br>${nB}は${nC}より <span class="num">${d}</span>${unit} 多い。<br>それぞれ 何${unit}？`,
       inputs: [
@@ -1284,7 +1295,17 @@ registerModule({
       C = m;
       S = A + B + C;
     } while (B <= 0 || C <= 0 || S > 40000 || S % 200 !== 0);
-    this._current = { nA: A, nB: B, nC: C, nameA: '長男', nameB: '次男', nameC: '三男', unitA: '円', unitB: '円', unitC: '円' };
+    const AB = A + B;
+    this._current = { nA: A, nB: B, nC: C, nameA: '長男', nameB: '次男', nameC: '三男', unitA: '円', unitB: '円', unitC: '円',
+      _title: 'かいせつ（比と和差）',
+      _steps: [
+        `三男の受け取りは 長男＋次男の 1/${n} なので<br>長男＋次男＋三男 ＝ 長男＋次男の ${n+1}/${n} 倍`,
+        `長男＋次男 ＝ ${S} × ${n}/${n+1} ＝ <em>${AB}円</em>`,
+        `長男は次男より ${d}円 多いので<br>長男 ＝ (${AB}＋${d}) ÷ 2 ＝ <em>${A}円</em>`,
+        `次男 ＝ ${AB} − ${A} ＝ <em>${B}円</em>`,
+        `三男 ＝ ${AB} ÷ ${n} ＝ <em>${C}円</em>`,
+      ],
+    };
     return {
       text: `<span class="num">${S}</span>円を長男・次男・三男の3人で分ける。<br>長男は次男より <span class="num">${d}</span>円 多く、<br>三男は長男と次男の合計の <span class="num">1/${n}</span>。<br>それぞれ 何円？`,
       inputs: [
@@ -1308,7 +1329,17 @@ registerModule({
       N = (b + r1 - r2) / (b - a);
       M = a * N + r1;
     } while (N < 5 || N > 30 || M > 250);
-    this._current = { nA: N, nB: M, nameA: '子供の人数', nameB: 'お菓子の数', unitA: '人', unitB: '個' };
+    this._current = { nA: N, nB: M, nameA: '子供の人数', nameB: 'お菓子の数', unitA: '人', unitB: '個',
+      _title: 'かいせつ（過不足算）',
+      _steps: [
+        `${a}個ずつ配ると ${r1}個 余る：M ＝ ${a}×N ＋ ${r1} ……①`,
+        `${b}個ずつ配ると 最後の1人が ${r2}個：M ＝ ${b}×(N−1) ＋ ${r2} ……②`,
+        `①＝② より：${a}N ＋ ${r1} ＝ ${b}N − ${b} ＋ ${r2}`,
+        `(${b}−${a})×N ＝ ${b} ＋ ${r1} − ${r2} ＝ <em>${b + r1 - r2}</em>`,
+        `N ＝ ${b + r1 - r2} ÷ ${b - a} ＝ <em>${N}人</em>`,
+        `M ＝ ${a}×${N} ＋ ${r1} ＝ <em>${M}個</em>`,
+      ],
+    };
     return {
       text: `子供にお菓子を配る。<br>1人に <span class="num">${a}</span>個ずつ配ると <span class="num">${r1}</span>個 余る。<br>1人に <span class="num">${b}</span>個ずつ配ると<br>最後の1人だけ <span class="num">${r2}</span>個 になる。<br>子供の人数とお菓子の数は？`,
       inputs: [
@@ -1330,8 +1361,21 @@ registerModule({
       N = nA + nB;
       S = vA * nA + vB * 0.8 * nB;
     } while (!Number.isInteger(S) || S > 20000 || N > 20);
+    const bPrice = vB * 0.8;
+    const hypo = vA * N;
+    const diffAmt = hypo - S;
+    const perSwap = vA - bPrice;
     this._current = { N, nA, nB, valA: vA, valB: vB, S,
-      nameA: 'A品', unitA: '個', nameB: 'B品', unitB: '個' };
+      nameA: 'A品', unitA: '個', nameB: 'B品', unitB: '個',
+      _title: 'かいせつ（仮定算）',
+      _steps: [
+        `全部A品(${vA}円)と仮定：${vA}×${N} ＝ <em>${hypo}円</em>`,
+        `実際は${S}円。差は <em>${Math.abs(diffAmt)}円</em>${diffAmt > 0 ? '多い' : '少ない'}`,
+        `A品1個をB品の2割引(${bPrice}円)に替えると<br>${Math.abs(perSwap)}円 ${diffAmt > 0 ? 'へる' : 'ふえる'}`,
+        `B品の数：${Math.abs(diffAmt)} ÷ ${Math.abs(perSwap)} ＝ <em>${nB}個</em>`,
+        `A品：${N} − ${nB} ＝ <em>${nA}個</em>`,
+      ],
+    };
     return {
       text: `定価 <span class="num">${vA}</span>円のA品と<br>定価 <span class="num">${vB}</span>円のB品を合わせて <span class="num">${N}</span>個 買った。<br>B品を2割引きで買ったら合計 <span class="num">${S}</span>円。<br>A品とB品は それぞれ 何個？`,
       inputs: [
@@ -1383,7 +1427,17 @@ registerModule({
     const A = p * k, B = q * k;
     const pairs = [['父','子'],['兄','弟'],['姉','妹']];
     const [nA, nB] = pairs[randInt(0, pairs.length - 1)];
-    this._current = { nA: A, nB: B, nameA: nA, nameB: nB, unitA: '歳', unitB: '歳' };
+    this._current = { nA: A, nB: B, nameA: nA, nameB: nB, unitA: '歳', unitB: '歳',
+      _title: 'かいせつ（年齢比の変化）',
+      _steps: [
+        `現在の比が ${p}:${q} なので、${nA}＝${p}□歳、${nB}＝${q}□歳 とおく`,
+        `${y}年後の比が ${r}:1 なので<br>${p}□＋${y} ＝ ${r}×(${q}□＋${y})`,
+        `${p}□＋${y} ＝ ${r*q}□＋${r*y}`,
+        `(${p}−${r*q})×□ ＝ ${r*y}−${y} ＝ <em>${(r-1)*y}</em>`,
+        `□ ＝ ${(r-1)*y} ÷ ${p - r*q} ＝ <em>${k}</em>`,
+        `${nA} ＝ ${p}×${k} ＝ <em>${A}歳</em>、${nB} ＝ ${q}×${k} ＝ <em>${B}歳</em>`,
+      ],
+    };
     return {
       text: `現在、${nA}と${nB}の年齢の比は <span class="num">${p}</span>：<span class="num">${q}</span>。<br><span class="num">${y}</span>年後の比は <span class="num">${r}</span>：1 になる。<br>現在の${nA}と${nB}の年齢は？`,
       inputs: [
@@ -1402,7 +1456,17 @@ registerModule({
       N = (b + d) / (c - a);
       total = a * N + b;
     } while (!Number.isInteger(N) || N < 5 || N > 30 || total > 250);
-    this._current = { nA: N, nB: total, nameA: '生徒の人数', nameB: 'ノートの冊数', unitA: '人', unitB: '冊' };
+    this._current = { nA: N, nB: total, nameA: '生徒の人数', nameB: 'ノートの冊数', unitA: '人', unitB: '冊',
+      _title: 'かいせつ（過不足算）',
+      _steps: [
+        `${a}冊ずつ配ると ${b}冊 余る：M ＝ ${a}×N ＋ ${b} ……①`,
+        `${c}冊ずつ配ると ${d}冊 不足：M ＝ ${c}×N − ${d} ……②`,
+        `①＝② より：${a}N ＋ ${b} ＝ ${c}N − ${d}`,
+        `(${c}−${a})×N ＝ ${b}＋${d} ＝ <em>${b+d}</em>`,
+        `N ＝ ${b+d} ÷ ${c-a} ＝ <em>${N}人</em>`,
+        `M ＝ ${a}×${N} ＋ ${b} ＝ <em>${total}冊</em>`,
+      ],
+    };
     return {
       text: `生徒にノートを配る。<br>1人に <span class="num">${a}</span>冊ずつ配ると <span class="num">${b}</span>冊 余り、<br>1人に <span class="num">${c}</span>冊ずつ配ると <span class="num">${d}</span>冊 足りない。<br>生徒の人数とノートの冊数は？`,
       inputs: [
@@ -1420,7 +1484,17 @@ registerModule({
       small = randInt(R + 2, 18);
       big = Q * small + R; S = big + small;
     } while (S > 180 || big > 130);
-    this._current = { nA: big, nB: small, nameA: '大きい数', nameB: '小さい数', unitA: '', unitB: '' };
+    this._current = { nA: big, nB: small, nameA: '大きい数', nameB: '小さい数', unitA: '', unitB: '',
+      _title: 'かいせつ（商と余りの利用）',
+      _steps: [
+        `大きい数 ＝ ${Q} × 小さい数 ＋ ${R} ……①（割り算の定義）`,
+        `大きい数 ＋ 小さい数 ＝ ${S} ……②`,
+        `①を②に代入：${Q}×小＋${R}＋小 ＝ ${S}`,
+        `(${Q}＋1)×小 ＝ ${S}−${R} ＝ <em>${S-R}</em>`,
+        `小さい数 ＝ ${S-R} ÷ ${Q+1} ＝ <em>${small}</em>`,
+        `大きい数 ＝ ${Q}×${small}＋${R} ＝ <em>${big}</em>`,
+      ],
+    };
     return {
       text: `2つの整数がある。<br>大きい方を小さい方で割ると<br>商 <span class="num">${Q}</span>、余り <span class="num">${R}</span>。<br>2つの数の和は <span class="num">${S}</span>。<br>2つの数はそれぞれ いくつ？`,
       inputs: [
@@ -1436,10 +1510,19 @@ registerModule({
     const k = randInt(1, 4) * 100;
     const total = 24 * k;
     const A = 11 * k, B = 7 * k, C = 6 * k;
+    const P = total / 3;
     this._current = {
       nA: A, nB: B, nC: C,
       nameA: 'A', nameB: 'B', nameC: 'C',
       unitA: '円', unitB: '円', unitC: '円',
+      _title: 'かいせつ（逆算・終わりから戻す）',
+      _steps: [
+        `③の後：3人とも <em>${P}円</em>（合計 ${total}円）`,
+        `③を逆にたどる（CがAに「Aの額と同じ」渡した）<br>③前のA ＝ ${P}÷2 ＝ ${P/2}円、C ＝ ${P}＋${P/2} ＝ <em>${P*3/2}円</em>`,
+        `②を逆にたどる（BがCに「Cの額と同じ」渡した）<br>②前のC ＝ ${P*3/2}÷2 ＝ ${P*3/4}円、B ＝ ${P}＋${P*3/4} ＝ <em>${P*7/4}円</em>`,
+        `①を逆にたどる（AがBに「Bの額と同じ」渡した）<br>①前のB ＝ ${P*7/4}÷2 ＝ ${P*7/8}円、A ＝ ${P/2}＋${P*7/8} ＝ <em>${P*11/8}円</em>`,
+        `はじめ：A ＝ <em>${A}円</em>、B ＝ <em>${B}円</em>、C ＝ <em>${C}円</em>`,
+      ],
     };
     return {
       text: `A・B・Cの3人がお金を持っている。<br>①AがBに「Bの持っている額と同じだけ」渡した。<br>②BがCに「Cの持っている額と同じだけ」渡した。<br>③CがAに「Aの持っている額と同じだけ」渡したら<br>3人とも <span class="num">${total / 3}</span>円 になった。<br>はじめ それぞれ 何円だったか？`,
@@ -1451,7 +1534,11 @@ registerModule({
     };
   },
 
-  explain() { return { type: 'wassan', ...this._current }; },
+  explain() {
+    const c = this._current;
+    if (c && c._steps) return { type: 'steps', title: c._title || 'かいせつ', steps: c._steps };
+    return { type: 'wassan', ...c };
+  },
 });
 
 // ============================================================
@@ -1552,8 +1639,21 @@ registerModule({
       D  = dW + dR;
       T  = dW / vW + dR / vR;
     } while (!Number.isInteger(T) || T > 60 || T < 8 || D > 3000);
+    const hypoT = D / vW;
+    const diffD = D - vW * T;
+    const gainPerMin = vR - vW;
     this._current = { N: D, nA: dW, nB: dR,
-      nameA: '歩いた道のり', unitA: 'm', nameB: '走った道のり', unitB: 'm' };
+      nameA: '歩いた道のり', unitA: 'm', nameB: '走った道のり', unitB: 'm',
+      _title: 'かいせつ（速さの鶴亀算）',
+      _steps: [
+        `全部 分速${vW}m で歩いたとしたら：${D} ÷ ${vW} ＝ ${hypoT}分`,
+        `実際は ${T}分。${hypoT > T ? hypoT - T + '分 速い' : T - hypoT + '分 遅い'}`,
+        `1分を「歩き→走り」に替えると<br>進む距離が ${gainPerMin}m 増える`,
+        `走った時間：${diffD} ÷ ${gainPerMin} ＝ <em>${dR / vR}分</em>`,
+        `歩いた道のり：${vW}×${dW/vW} ＝ <em>${dW}m</em>`,
+        `走った道のり：${vR}×${dR/vR} ＝ <em>${dR}m</em>`,
+      ],
+    };
     return {
       text: `分速 <span class="num">${vW}</span>m で歩き、<br>分速 <span class="num">${vR}</span>m で走って学校に着いた。<br>学校までの道のりは <span class="num">${D}</span>m、<br>かかった時間は <span class="num">${T}</span>分。<br>歩いた道のりと走った道のりは それぞれ 何m？`,
       inputs: [
@@ -1579,8 +1679,22 @@ registerModule({
       if (N < 8 || N > 25 || S > 5000 || S % 10 !== 0) continue;
       break;
     }
+    const remN = N - d;
+    const remS = S - vA * d;
+    const coeff = vA + vB - 2 * vC;
+    const constTerm = remS - vC * remN;
     this._current = { nA, nB, nC, N, S,
-      nameA: 'りんご', unitA: '個', nameB: 'みかん', unitB: '個', nameC: 'かき', unitC: '個' };
+      nameA: 'りんご', unitA: '個', nameB: 'みかん', unitB: '個', nameC: 'かき', unitC: '個',
+      _title: 'かいせつ（置き換え・消去法）',
+      _steps: [
+        `りんご ＝ みかん ＋ ${d} なので<br>みかんを □ とおくとりんごは □＋${d}`,
+        `かき ＝ ${N} − (□＋${d}) − □ ＝ ${remN} − 2□`,
+        `金額の式：${vA}(□＋${d}) ＋ ${vB}□ ＋ ${vC}(${remN}−2□) ＝ ${S}`,
+        `(${vA}＋${vB}−2×${vC})□ ＝ ${S} − ${vA*d} − ${vC*remN}<br><em>${coeff}</em>□ ＝ <em>${constTerm}</em>`,
+        `みかん □ ＝ ${constTerm} ÷ ${coeff} ＝ <em>${nB}個</em>`,
+        `りんご ＝ ${nB}＋${d} ＝ <em>${nA}個</em>、かき ＝ ${remN}−2×${nB} ＝ <em>${nC}個</em>`,
+      ],
+    };
     return {
       text: `<span class="num">${vA}</span>円のりんご、<span class="num">${vB}</span>円のみかん、<span class="num">${vC}</span>円のかきを<br>合わせて <span class="num">${N}</span>個 買うと <span class="num">${S}</span>円。<br>りんごはみかんより <span class="num">${d}</span>個 多い。<br>りんご・みかん・かき それぞれ 何個？`,
       inputs: [
@@ -1602,8 +1716,19 @@ registerModule({
       wrong   = N - correct;
       T       = p * correct - q * wrong;
     } while (T <= 0 || T > N * p - 10);
+    const hypoScore = N * p;
+    const diffScore = hypoScore - T;
     this._current = { N, nA: correct, nB: wrong,
-      nameA: '正解', unitA: '問', nameB: '不正解', unitB: '問' };
+      nameA: '正解', unitA: '問', nameB: '不正解', unitB: '問',
+      _title: 'かいせつ（仮定算）',
+      _steps: [
+        `全問正解と仮定：${N}×${p} ＝ <em>${hypoScore}点</em>`,
+        `実際は ${T}点。差は <em>${diffScore}点</em> 多い`,
+        `1問を「正解→不正解」に替えると<br>正解の${p}点がなくなり、さらに${q}点引かれる → ${p+q}点 へる`,
+        `不正解の数：${diffScore} ÷ ${p+q} ＝ <em>${wrong}問</em>`,
+        `正解：${N} − ${wrong} ＝ <em>${correct}問</em>`,
+      ],
+    };
     return {
       text: `<span class="num">${N}</span>問のテスト。<br>正解は1問 <span class="num">${p}</span>点、<br>不正解は1問 <span class="num">${q}</span>点 引かれる。<br>合計 <span class="num">${T}</span>点 だったとき、<br>正解と不正解は それぞれ 何問？`,
       inputs: [
@@ -1624,7 +1749,17 @@ registerModule({
       nA = (k * N - M) / (k + 1);
       nB = N - nA;
     } while (nA <= 0 || nB <= 0 || nA + M > N * k);
-    this._current = { N, nA, nB, nameA: 'A', unitA: '個', nameB: 'B', unitB: '個' };
+    this._current = { N, nA, nB, nameA: 'A', unitA: '個', nameB: 'B', unitB: '個',
+      _title: 'かいせつ（連立・置き換え）',
+      _steps: [
+        `はじめの A を □、B を △ とする`,
+        `□ ＋ △ ＝ ${N} ……①`,
+        `□ ＋ ${M} ＝ ${k}×△ → □ ＝ ${k}△ − ${M} ……②`,
+        `②を①に代入：${k}△ − ${M} ＋ △ ＝ ${N}<br>(${k}＋1)△ ＝ ${N+M}`,
+        `△ ＝ ${N+M} ÷ ${k+1} ＝ <em>${nB}個</em>（B）`,
+        `□ ＝ ${N} − ${nB} ＝ <em>${nA}個</em>（A）`,
+      ],
+    };
     return {
       text: `AとBが合わせて <span class="num">${N}</span>個 ある。<br>Aを <span class="num">${M}</span>個 追加すると、<br>AはBの <span class="num">${k}</span>倍 になった。<br>はじめ、AとBは それぞれ 何個？`,
       inputs: [
@@ -1672,8 +1807,20 @@ registerModule({
       tW = randInt(5, 20); tR = randInt(3, 15);
       T = tW + tR; D = vW * tW + vR * tR;
     } while (D % 10 !== 0 || D > 4000 || T > 40);
+    const hypoD = vW * T;
+    const gainD = D - hypoD;
+    const gainPerMin = vR - vW;
     this._current = { N: T, nA: tW, nB: tR, valA: vW, valB: vR, S: D,
-      nameA: '歩き', unitA: '分', nameB: '走り', unitB: '分', unitS: 'm' };
+      nameA: '歩き', unitA: '分', nameB: '走り', unitB: '分', unitS: 'm',
+      _title: 'かいせつ（速さの鶴亀算）',
+      _steps: [
+        `全部 分速${vW}m で歩いたとしたら：${vW}×${T} ＝ <em>${hypoD}m</em>`,
+        `実際は ${D}m。差は <em>${gainD}m</em> 多い`,
+        `1分を「歩き→走り」に替えると：${gainPerMin}m 増える`,
+        `走った時間：${gainD} ÷ ${gainPerMin} ＝ <em>${tR}分</em>`,
+        `歩いた時間：${T} − ${tR} ＝ <em>${tW}分</em>`,
+      ],
+    };
     return {
       text: `太郎は分速 <span class="num">${vW}</span>m で歩き、<br>分速 <span class="num">${vR}</span>m で走って学校へ行った。<br>合計 <span class="num">${T}</span>分 かかり、距離は <span class="num">${D}</span>m。<br>歩いた時間と走った時間は それぞれ 何分？`,
       inputs: [
@@ -1700,8 +1847,21 @@ registerModule({
       if (N < 6 || N > 50 || nA < 2 || nB < 2) continue;
       break;
     }
-    this._current = { N, nA, nB, valA: Ma, valB: Mb, S: M * N,
-      nameA: 'A組', unitA: '人', nameB: 'B組', unitB: '人', unitS: '点' };
+    const totalScore = M * N;
+    const diffMa = Ma - Mb;
+    const rhs = totalScore - Mb * N;
+    this._current = { N, nA, nB, valA: Ma, valB: Mb, S: totalScore,
+      nameA: 'A組', unitA: '人', nameB: 'B組', unitB: '人', unitS: '点',
+      _title: 'かいせつ（混合平均・鶴亀算）',
+      _steps: [
+        `A組をX人とすると、B組 ＝ ${N}−X 人`,
+        `A組の合計：${Ma}×X`,
+        `B組の合計：${Mb}×(${N}−X)`,
+        `2組合わせた合計：${Ma}X ＋ ${Mb}(${N}−X) ＝ ${M}×${N} ＝ <em>${totalScore}</em>`,
+        `(${Ma}−${Mb})×X ＝ ${totalScore} − ${Mb}×${N} ＝ <em>${rhs}</em>`,
+        `X ＝ ${rhs} ÷ ${diffMa} ＝ <em>${nA}人</em>（A組）、B組 ＝ <em>${nB}人</em>`,
+      ],
+    };
     return {
       text: `A組とB組が合同でテストを受けた。<br>A組の平均は <span class="num">${Ma}</span>点、B組の平均は <span class="num">${Mb}</span>点。<br>2組合わせた平均は <span class="num">${M}</span>点、合計 <span class="num">${N}</span>人。<br>A組と B組は それぞれ 何人？`,
       inputs: [
@@ -1730,8 +1890,23 @@ registerModule({
     const profitLabel = P >= 0
       ? `<span class="num">${P}</span>円 の 利益`
       : `<span class="num">${-P}</span>円 の 損失`;
+    const profitPerA = vA * rA / 100;
+    const lossPerB  = vB * rB / 100;
+    const hypoAllA  = profitPerA * N;
+    const perSwapP  = profitPerA + lossPerB;
+    const diffP     = hypoAllA - P;
     this._current = { N, nA, nB, valA: vA, valB: vB, S: 0,
-      nameA: 'A商品', unitA: '個', nameB: 'B商品', unitB: '個', unitS: '円' };
+      nameA: 'A品', unitA: '個', nameB: 'B品', unitB: '個', unitS: '円',
+      _title: 'かいせつ（損益算・仮定算）',
+      _steps: [
+        `A品1個の利益：${vA}×${rA}% ＝ <em>${profitPerA}円</em>`,
+        `B品1個の損失：${vB}×${rB}% ＝ <em>${lossPerB}円</em>`,
+        `全部A品と仮定：利益 ${profitPerA}×${N} ＝ <em>${hypoAllA}円</em>`,
+        `実際の全体損益は${P >= 0 ? '利益' : '損失'} <em>${Math.abs(P)}円</em>。差は <em>${Math.abs(diffP)}円</em>`,
+        `A品1個をB品に替えると：${profitPerA}＋${lossPerB} ＝ <em>${perSwapP}円</em> へる`,
+        `B品の数：${Math.abs(diffP)} ÷ ${perSwapP} ＝ <em>${nB}個</em>、A品 ＝ <em>${nA}個</em>`,
+      ],
+    };
     return {
       text: `原価 <span class="num">${vA}</span>円の A品に <span class="num">${rA}</span>% の利益を乗せ、<br>原価 <span class="num">${vB}</span>円の B品を <span class="num">${rB}</span>% 引きで 売った。<br>合わせて <span class="num">${N}</span>個 売り、全体で ${profitLabel}。<br>A品と B品は それぞれ 何個？`,
       inputs: [
@@ -1758,9 +1933,22 @@ registerModule({
       if (!Number.isInteger(check) || check !== nA || check <= 0) continue;
       break;
     }
+    const remS2  = S - vC * nC;
+    const hypoB  = vB * Q;
+    const diffAB = remS2 - hypoB;
+    const perSwapAB = vA - vB;
     this._current = {
       nA, nB, nC, N, S,
       nameA: 'A', unitA: '個', nameB: 'B', unitB: '個', nameC: 'C', unitC: '個',
+      _title: 'かいせつ（消去→鶴亀）',
+      _steps: [
+        `A＋B ＝ ${Q}個 なので C ＝ ${N}−${Q} ＝ <em>${nC}個</em>`,
+        `Cの合計金額：${vC}×${nC} ＝ ${vC*nC}円`,
+        `残りA＋Bで ${remS2}円、${Q}個の鶴亀算`,
+        `全部B(${vB}円)と仮定：${vB}×${Q} ＝ ${hypoB}円`,
+        `差 ${diffAB}円、A1個をBに替えると ${Math.abs(perSwapAB)}円${diffAB>0?'ふえる':'へる'}`,
+        `A ＝ ${Math.abs(diffAB)} ÷ ${Math.abs(perSwapAB)} ＝ <em>${nA}個</em>、B ＝ ${Q}−${nA} ＝ <em>${nB}個</em>`,
+      ],
     };
     return {
       text: `1個 <span class="num">${vA}</span>円 の A、<span class="num">${vB}</span>円 の B、<span class="num">${vC}</span>円 の C を<br>合わせて <span class="num">${N}</span>個 買うと <span class="num">${S}</span>円。<br>A と B を合わせると <span class="num">${Q}</span>個 だった。<br>A・B・C それぞれ 何個？`,
@@ -1772,7 +1960,11 @@ registerModule({
     };
   },
 
-  explain() { return { type: 'area', ...this._current }; },
+  explain() {
+    const c = this._current;
+    if (c && c._steps) return { type: 'steps', title: c._title || 'かいせつ', steps: c._steps };
+    return { type: 'area', ...c };
+  },
 });
 
 // ============================================================
@@ -2854,6 +3046,9 @@ function renderExplanation(data, diagramId, stepsId, titleId) {
     title = 'かいせつ（線分図）';
     diagramHTML = buildWassanVisual(data);
     steps = buildWassanSteps(data);
+  } else if (data.type === 'steps') {
+    title = data.title || 'かいせつ';
+    steps = data.steps || [];
   }
 
   if (titleEl) titleEl.textContent = title;
